@@ -31,6 +31,7 @@ class SetupForm(BaseForm):
         validators=[InputRequired()],
     )
 
+
     name = StringField(
         "Admin Username",
         description="Your username for the administration account",
@@ -51,9 +52,7 @@ class SetupForm(BaseForm):
         "Logo",
         description="Logo to use for the website instead of a CTF name. Used as the home page button. Optional.",
     )
-    ctf_banner = FileField(
-        "Banner", description="Banner to use for the homepage. Optional."
-    )
+    ctf_banner = FileField("Banner", description="Banner to use for the homepage.")
     ctf_small_icon = FileField(
         "Small Icon",
         description="favicon used in user's browsers. Only PNGs accepted. Must be 32x32px. Optional.",

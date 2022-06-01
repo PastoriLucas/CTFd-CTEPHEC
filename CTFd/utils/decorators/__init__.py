@@ -7,7 +7,7 @@ from CTFd.utils import config, get_config
 from CTFd.utils import user as current_user
 from CTFd.utils.config import is_teams_mode
 from CTFd.utils.dates import ctf_ended, ctf_started, ctftime, view_after_ctf
-from CTFd.utils.user import authed, get_current_team, get_current_user, is_admin
+from CTFd.utils.user import authed, get_current_team, get_current_user, is_admin, is_observer
 
 
 def during_ctf_time_only(f):
@@ -19,7 +19,7 @@ def during_ctf_time_only(f):
 
     @functools.wraps(f)
     def during_ctf_time_only_wrapper(*args, **kwargs):
-        if ctftime() or current_user.is_admin():
+        if ctftime() or (current_user.is_admin() or current_user.is_observer()):
             return f(*args, **kwargs)
         else:
             if ctf_ended():
@@ -62,7 +62,7 @@ def require_verified_emails(f):
         if get_config("verify_emails"):
             if current_user.authed():
                 if (
-                    current_user.is_admin() is False
+                    (current_user.is_admin() or current_user.is_observer()) is False
                     and current_user.is_verified() is False
                 ):  # User is not confirmed
                     if request.content_type == "application/json":
@@ -122,14 +122,14 @@ def registered_only(f):
 
 def admins_only(f):
     """
-    Decorator that requires the user to be authenticated and an admin
+    Decorator that requires the user to be authenticated and an admin or observer
     :param f:
     :return:
     """
 
     @functools.wraps(f)
     def admins_only_wrapper(*args, **kwargs):
-        if is_admin():
+        if is_admin() or is_observer():
             return f(*args, **kwargs)
         else:
             if request.content_type == "application/json":
@@ -194,7 +194,7 @@ def require_complete_profile(f):
     @functools.wraps(f)
     def _require_complete_profile(*args, **kwargs):
         if authed():
-            if is_admin():
+            if is_admin() or is_observer():
                 return f(*args, **kwargs)
             else:
                 user = get_current_user()

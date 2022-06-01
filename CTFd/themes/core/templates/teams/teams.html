@@ -47,9 +47,12 @@
 				<thead>
 					<tr>
 						<td><b>Team</b></td>
+						<td><b>Modifier</b></td>
+						<!--
 						<td><b>Website</b></td>
 						<td class="d-none d-md-table-cell d-lg-table-cell"><b>Affiliation</b></td>
 						<td class="d-none d-md-table-cell d-lg-table-cell"><b>Country</b></td>
+						-->
 					</tr>
 				</thead>
 				<tbody>
@@ -67,6 +70,10 @@
 							</a>
 						{% endif %}
 						</td>
+						<td>
+							<a>{{team.modifier}} %</a>
+						</td>
+						<!--
 						<td class="text-center" style="width: 10px;">
 							{% if team.website and (team.website.startswith('http://') or team.website.startswith('https://')) %}
 								<a href="{{ team.website }}" target="_blank" rel="noopener">
@@ -95,6 +102,7 @@
 								{% endif %}
 							</span>
 						</td>
+						-->
 					</tr>
 				{% endfor %}
 				</tbody>

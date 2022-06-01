@@ -7,7 +7,7 @@ from CTFd.models import TeamFieldEntries, TeamFields, Teams, Users, ma
 from CTFd.schemas.fields import TeamFieldEntriesSchema
 from CTFd.utils import get_config, string_types
 from CTFd.utils.crypto import verify_password
-from CTFd.utils.user import get_current_team, get_current_user, is_admin
+from CTFd.utils.user import get_current_team, get_current_user, is_admin, is_observer
 from CTFd.utils.validators import validate_country_code
 
 
@@ -104,7 +104,7 @@ class TeamSchema(ma.ModelSchema):
             return
 
         existing_team = Teams.query.filter_by(email=email).first()
-        if is_admin():
+        if (is_admin() or is_observer()):
             team_id = data.get("id")
             if team_id:
                 if existing_team and existing_team.id != team_id:
@@ -131,7 +131,7 @@ class TeamSchema(ma.ModelSchema):
         password = data.get("password")
         confirm = data.get("confirm")
 
-        if is_admin():
+        if (is_admin() or is_observer()):
             pass
         else:
             current_team = get_current_team()
@@ -171,7 +171,7 @@ class TeamSchema(ma.ModelSchema):
         if captain_id is None:
             return
 
-        if is_admin():
+        if (is_admin() or is_observer()):
             team_id = data.get("id")
             if team_id:
                 target_team = Teams.query.filter_by(id=team_id).first()
@@ -212,7 +212,7 @@ class TeamSchema(ma.ModelSchema):
 
         current_team = get_current_team()
 
-        if is_admin():
+        if (is_admin() or is_observer()):
             team_id = data.get("id")
             if team_id:
                 target_team = Teams.query.filter_by(id=data["id"]).first()

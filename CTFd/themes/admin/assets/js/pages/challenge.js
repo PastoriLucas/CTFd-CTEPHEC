@@ -14,7 +14,13 @@ import Requirements from "../components/requirements/Requirements.vue";
 import TopicsList from "../components/topics/TopicsList.vue";
 import TagsList from "../components/tags/TagsList.vue";
 import ChallengeFilesList from "../components/files/ChallengeFilesList.vue";
+import FlagListObserver from "../components/flags/FlagListObserver.vue";
+import RequirementsObserver from "../components/requirements/RequirementsObserver.vue";
+import TopicsListObserver from "../components/topics/TopicsListObserver.vue";
+import TagsListObserver from "../components/tags/TagsListObserver.vue";
+import ChallengeFilesListObserver from "../components/files/ChallengeFilesListObserver.vue";
 import HintsList from "../components/hints/HintsList.vue";
+import HintsListObserver from "../components/hints/HintsListObserver.vue";
 import NextChallenge from "../components/next/NextChallenge.vue";
 import hljs from "highlight.js";
 
@@ -35,6 +41,21 @@ const loadHint = id => {
     // displayUnlock(id);
   });
 };
+
+const storeTimeHint = (id, chal, team) => {
+  CTFd.api.post_hints_timer({ hintId: id, chalId:chal, teamId:team, preview: true}).then(response => {
+    if (response.data.content) {
+      displayHint(response.data);
+      return;
+    }
+  })
+}
+
+function renderExplanation(response){
+  var result = response.data;
+
+  var explanation_input = $("#feedback-textarea")
+}
 
 function renderSubmissionResponse(response, cb) {
   var result = response.data;
@@ -290,6 +311,7 @@ $(() => {
 
             $(".load-hint").on("click", function(_event) {
               loadHint($(this).data("hint-id"));
+              storeTimeHint($(this).data("hint-id"), $(this).data("chal-id"), $(this).data("team-id"));
             });
 
             $("#challenge-submit").click(function(e) {
@@ -444,11 +466,31 @@ $(() => {
     }).$mount(vueContainer);
   }
 
+  // Load FlagList component for observer users
+  if (document.querySelector("#challenge-flags-observer")) {
+    const flagList = Vue.extend(FlagListObserver);
+    let vueContainer = document.createElement("div");
+    document.querySelector("#challenge-flags-observer").appendChild(vueContainer);
+    new flagList({
+      propsData: { challenge_id: window.CHALLENGE_ID }
+    }).$mount(vueContainer);
+  }
+
   // Load TopicsList component
   if (document.querySelector("#challenge-topics")) {
     const topicsList = Vue.extend(TopicsList);
     let vueContainer = document.createElement("div");
     document.querySelector("#challenge-topics").appendChild(vueContainer);
+    new topicsList({
+      propsData: { challenge_id: window.CHALLENGE_ID }
+    }).$mount(vueContainer);
+  }
+
+ // Load TopicsList component for observer users
+  if (document.querySelector("#challenge-topics-observer")) {
+    const topicsList = Vue.extend(TopicsListObserver);
+    let vueContainer = document.createElement("div");
+    document.querySelector("#challenge-topics-observer").appendChild(vueContainer);
     new topicsList({
       propsData: { challenge_id: window.CHALLENGE_ID }
     }).$mount(vueContainer);
@@ -464,11 +506,31 @@ $(() => {
     }).$mount(vueContainer);
   }
 
+  // Load TagsList component for observer users
+  if (document.querySelector("#challenge-tags-observer")) {
+    const tagList = Vue.extend(TagsListObserver);
+    let vueContainer = document.createElement("div");
+    document.querySelector("#challenge-tags-observer").appendChild(vueContainer);
+    new tagList({
+      propsData: { challenge_id: window.CHALLENGE_ID }
+    }).$mount(vueContainer);
+  }
+
   // Load Requirements component
   if (document.querySelector("#prerequisite-add-form")) {
     const reqsComponent = Vue.extend(Requirements);
     let vueContainer = document.createElement("div");
     document.querySelector("#prerequisite-add-form").appendChild(vueContainer);
+    new reqsComponent({
+      propsData: { challenge_id: window.CHALLENGE_ID }
+    }).$mount(vueContainer);
+  }
+
+  // Load Requirements component for observer users
+  if (document.querySelector("#prerequisite-add-form-observer")) {
+    const reqsComponent = Vue.extend(RequirementsObserver);
+    let vueContainer = document.createElement("div");
+    document.querySelector("#prerequisite-add-form-observer").appendChild(vueContainer);
     new reqsComponent({
       propsData: { challenge_id: window.CHALLENGE_ID }
     }).$mount(vueContainer);
@@ -484,9 +546,20 @@ $(() => {
     }).$mount(vueContainer);
   }
 
+  // Load ChallengeFilesList component for observer users
+  if (document.querySelector("#challenge-files-observer")) {
+    const challengeFilesList = Vue.extend(ChallengeFilesListObserver);
+    let vueContainer = document.createElement("div");
+    document.querySelector("#challenge-files-observer").appendChild(vueContainer);
+    new challengeFilesList({
+      propsData: { challenge_id: window.CHALLENGE_ID }
+    }).$mount(vueContainer);
+  }
+
   // Load HintsList component
   if (document.querySelector("#challenge-hints")) {
     const hintsList = Vue.extend(HintsList);
+    console.log(hintsList)
     let vueContainer = document.createElement("div");
     document.querySelector("#challenge-hints").appendChild(vueContainer);
     new hintsList({
@@ -525,4 +598,25 @@ $(() => {
       loadChalTemplate(challenge);
     });
   });
+
+  $(".load-timedhint").click(function(_event) {
+    storeTimedHint(this.value);
+  });
 });
+
+const storeTimedHint = id => {
+  let chal = id;
+  var today = new Date();
+  var date = today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();
+  var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
+  var dateTime = date+' '+time;
+  console.log(dateTime);
+  console.log(chal);
+  console.log(teamId);
+  CTFd.api.post_hints_timer({team_id : teamId , end_time : dateTime}).then(response => {
+    if (response.data.content) {
+      displayHint(response.data);
+      return;
+    }
+  })
+}

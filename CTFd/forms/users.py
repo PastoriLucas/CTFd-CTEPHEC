@@ -117,8 +117,9 @@ class UserSearchForm(BaseForm):
             ("name", "Name"),
             ("id", "ID"),
             ("email", "Email"),
-            ("affiliation", "Affiliation"),
-            ("website", "Website"),
+            ('year','Year'),
+            ##("affiliation", "Affiliation"),
+            ##("website", "Website"),
             ("ip", "IP Address"),
         ],
         default="name",
@@ -133,8 +134,8 @@ class PublicUserSearchForm(BaseForm):
         "Search Field",
         choices=[
             ("name", "Name"),
-            ("affiliation", "Affiliation"),
-            ("website", "Website"),
+            ##("affiliation", "Affiliation"),
+            ##("website", "Website"),
         ],
         default="name",
         validators=[InputRequired()],
@@ -147,10 +148,16 @@ class UserBaseForm(BaseForm):
     name = StringField("User Name", validators=[InputRequired()])
     email = EmailField("Email", validators=[InputRequired()])
     password = PasswordField("Password")
+    year = SelectField(
+        "Year",
+        description="Choose which year you are in",
+        choices=[("1", "1"), ("2", "2"), ("3", "3"), ("4", "old student")],
+        default="false",
+        )
     website = StringField("Website")
     affiliation = StringField("Affiliation")
     country = SelectField("Country", choices=SELECT_COUNTRIES_LIST)
-    type = SelectField("Type", choices=[("user", "User"), ("admin", "Admin")])
+    type = SelectField("Type", choices=[("user", "User"), ("admin", "Admin"),("observer","Observer")])
     verified = BooleanField("Verified")
     hidden = BooleanField("Hidden")
     banned = BooleanField("Banned")

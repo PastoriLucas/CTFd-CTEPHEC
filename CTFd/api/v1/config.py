@@ -8,7 +8,7 @@ from CTFd.api.v1.helpers.schemas import sqlalchemy_to_pydantic
 from CTFd.api.v1.schemas import APIDetailedSuccessResponse, APIListSuccessResponse
 from CTFd.cache import clear_config, clear_standings
 from CTFd.constants import RawEnum
-from CTFd.models import Configs, Fields, db
+from CTFd.models import Configs, Fields, Teams, db
 from CTFd.schemas.config import ConfigSchema
 from CTFd.schemas.fields import FieldSchema
 from CTFd.utils import set_config
@@ -109,6 +109,24 @@ class ConfigList(Resource):
     )
     def patch(self):
         req = request.get_json()
+        print(req)
+        
+        if("first_year_modifier" in req or "second_year_modifier" in req or "third_year_modifier" in req or "old_student_modifier" in req):
+            all_teams = Teams.query.all()
+            for team in all_teams :
+                modifier = 0
+                for member in team.members :
+                    if(member.year == 1):
+                        modifier += int(req['first_year_modifier'])
+                    if(member.year == 2):
+                        modifier += int(req['second_year_modifier'])
+                    if(member.year == 3):
+                        modifier += int(req['third_year_modifier'])
+                    if(member.year == 4):
+                        modifier += int(req['old_student_modifier'])
+                modifier = modifier / len(team.members)
+                team.modifier = modifier
+                    
         schema = ConfigSchema()
 
         for key, value in req.items():

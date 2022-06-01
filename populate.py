@@ -32,6 +32,9 @@ parser.add_argument(
     "--challenges", help="Amount of challenges to generate", default=20, type=int
 )
 parser.add_argument(
+    "--succes", help="Amount of succes to generate", default=20, type=int
+)
+parser.add_argument(
     "--awards", help="Amount of awards to generate", default=5, type=int
 )
 
@@ -43,6 +46,7 @@ mode = args.mode
 USER_AMOUNT = args.users
 TEAM_AMOUNT = args.teams if args.mode == "teams" else 0
 CHAL_AMOUNT = args.challenges
+SUCC_AMOUNT = args.succes
 AWARDS_AMOUNT = args.awards
 
 categories = [
@@ -142,6 +146,7 @@ if __name__ == "__main__":
             f = Flags(challenge_id=x + 1, content=word, type="static")
             db.session.add(f)
             db.session.commit()
+            
 
         # Generating Files
         print("GENERATING FILES")
@@ -200,6 +205,7 @@ if __name__ == "__main__":
                             oauth_id = random.randint(1, 1000)
                         used_oauth_ids.append(oauth_id)
                         user.oauth_id = oauth_id
+                        user.year = random.randint(1,3)
                     if mode == "teams":
                         user.team_id = random.randint(1, TEAM_AMOUNT)
                     db.session.add(user)

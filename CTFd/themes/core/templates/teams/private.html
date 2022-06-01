@@ -180,10 +180,21 @@
 			</h2>
 			<h2 id="team-score" class="text-center">
 				{% if score %}
-					{{ score }}
+					{{ '%0.2f'| format(score / 100 *team.modifier)}}
 					<small>points</small>
 				{% endif %}
 			</h2>
+			<h4>
+				{% if firstblood %}<span type="button" class="badge badge-danger" data-toggle="tooltip" data-placement="bottom" title="This team got firstblood on {{firstblood|length}} challenges">
+					{{firstblood|length}} firstblood</span>
+				{% endif %}
+				{% if categoryBreakdown %}<span type="button" class="badge badge-primary" data-toggle="tooltip" data-placement="bottom" title="This team got categoryBreakdown for these categories: {% for i in categoryBreakdown %}{{i}} {%endfor%}">
+					{{categoryBreakdown|length}} categorybreakdown</span>
+				{% endif %}
+				{% if categoryFirstblood %}<span type="button" class="badge badge-warning" data-toggle="tooltip" data-placement="bottom" title="This team got categoryFirstblood for these categories: {% for i in categoryFirstblood %}{{i}} {%endfor%}">
+					{{categoryFirstblood|length}} categoryfirstblood</span>
+				{% endif %}
+			</h4>		
 			<div class="pt-3">
 				<a class="edit-team">
 					{% if team.captain_id == user.id %}
@@ -265,7 +276,7 @@
 									<span class="badge badge-primary ml-2">Captain</span>
 								{% endif %}
 							</td>
-							<td>{{ member.score }}</td>
+							<td>{{ '%0.2f'| format(member.score / 100 * team.modifier) }}</td>
 						</tr>
 					{% endfor %}
 					</tbody>
@@ -332,7 +343,10 @@
 							<td><b>Challenge</b></td>
 							<td class="d-none d-md-block d-lg-block"><b>Category</b></td>
 							<td><b>Value</b></td>
+							<td><b>Modifier</b></td>
+							<td><b>Basic value</b></td>
 							<td><b>Time</b></td>
+							<td><b>Firstblood</b></td>
 						</tr>
 						</thead>
 						<tbody>
@@ -344,9 +358,16 @@
 									</a>
 								</td>
 								<td class="d-none d-md-block d-lg-block">{{ solve.challenge.category }}</td>
+								<td>{{ '%0.2f'| format(solve.challenge.value / 100 * team.modifier)}}</td>
+								<td>{{ team.modifier }} %</td>
 								<td>{{ solve.challenge.value }}</td>
 								<td class="solve-time">
 									<span data-time="{{ solve.date | isoformat }}">{{ solve.date }}</span>
+								</td>
+								<td>
+									{%if solve.firstblood %}
+										<span class="badge badge-danger">firstblood</span>
+									{%endif%}
 								</td>
 							</tr>
 						{% endfor %}

@@ -8,7 +8,7 @@ from CTFd.schemas.fields import UserFieldEntriesSchema
 from CTFd.utils import get_config, string_types
 from CTFd.utils.crypto import verify_password
 from CTFd.utils.email import check_email_is_whitelisted
-from CTFd.utils.user import get_current_user, is_admin
+from CTFd.utils.user import get_current_user, is_admin, is_observer
 from CTFd.utils.validators import validate_country_code
 
 
@@ -36,6 +36,11 @@ class UserSchema(ma.ModelSchema):
             validate.Email("Emails must be a properly formatted email address"),
             validate.Length(min=1, max=128, error="Emails must not be empty"),
         ],
+    )
+    year = field_for(
+        Users,
+        "year",
+        allow_none=False,
     )
     website = field_for(
         Users,
@@ -65,7 +70,7 @@ class UserSchema(ma.ModelSchema):
 
         existing_user = Users.query.filter_by(name=name).first()
         current_user = get_current_user()
-        if is_admin():
+        if (is_admin() or is_observer()):
             user_id = data.get("id")
             if user_id:
                 if existing_user and existing_user.id != user_id:
@@ -106,7 +111,7 @@ class UserSchema(ma.ModelSchema):
 
         existing_user = Users.query.filter_by(email=email).first()
         current_user = get_current_user()
-        if is_admin():
+        if (is_admin() or is_observer()):
             user_id = data.get("id")
             if user_id:
                 if existing_user and existing_user.id != user_id:
@@ -164,7 +169,7 @@ class UserSchema(ma.ModelSchema):
         confirm = data.get("confirm")
         target_user = get_current_user()
 
-        if is_admin():
+        if (is_admin() or is_observer()):
             pass
         else:
             if password and (bool(confirm) is False):
@@ -198,7 +203,7 @@ class UserSchema(ma.ModelSchema):
 
         current_user = get_current_user()
 
-        if is_admin():
+        if (is_admin() or is_observer()):
             user_id = data.get("id")
             if user_id:
                 target_user = Users.query.filter_by(id=data["id"]).first()
@@ -322,6 +327,7 @@ class UserSchema(ma.ModelSchema):
             "website",
             "name",
             "email",
+            "year",
             "country",
             "affiliation",
             "bracket",
@@ -338,6 +344,7 @@ class UserSchema(ma.ModelSchema):
             "country",
             "banned",
             "email",
+            "year",
             "affiliation",
             "secret",
             "bracket",

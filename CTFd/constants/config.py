@@ -13,6 +13,7 @@ class ConfigTypes(str, RawEnum):
     REGISTRATION_VISIBILITY = "registration_visibility"
 
 
+
 @JinjaEnum
 class UserModeTypes(str, RawEnum):
     USERS = "users"
@@ -24,6 +25,7 @@ class ChallengeVisibilityTypes(str, RawEnum):
     PUBLIC = "public"
     PRIVATE = "private"
     ADMINS = "admins"
+    
 
 
 @JinjaEnum

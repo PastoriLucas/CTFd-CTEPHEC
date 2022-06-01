@@ -8,9 +8,11 @@
 	<div class="container">
 		<h1>Pages
 			<a class="no-decoration" href="{{ url_for('admin.pages_new') }}">
-				<span class="create-page" role="button" data-toggle="tooltip" title="Create Page">
-					<i class="btn-fa fas fa-plus-circle"></i>
-				</span>
+				{% if current_user_type == "admin" %}
+					<span class="create-page" role="button" data-toggle="tooltip" title="Create Page">
+						<i class="btn-fa fas fa-plus-circle"></i>
+					</span>
+				{%endif%}
 			</a>
 		</h1>
 	</div>
@@ -21,9 +23,11 @@
 		<div class="col-md-12">
 			<div class="float-right pb-3">
 				<div class="btn-group" role="group">
-					<button type="button" class="btn btn-outline-danger" data-toggle="tooltip" title="Delete Pages" id="pages-delete-button">
-						<i class="btn-fa fas fa-trash-alt"></i>
-					</button>
+					{% if current_user_type == "admin" %}
+						<button type="button" class="btn btn-outline-danger" data-toggle="tooltip" title="Delete Pages" id="pages-delete-button">
+							<i class="btn-fa fas fa-trash-alt"></i>
+						</button>
+					{%endif%}
 				</div>
 			</div>
 		</div>

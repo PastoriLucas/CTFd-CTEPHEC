@@ -1,0 +1,17 @@
+{% extends "admin/base.html" %}
+{% block content %}
+<style>.body { margin-top: 3vh; }</style>
+<div class="container body">
+    <h2>My Plugin configuration</h2>
+    <form method="POST">
+        {% for config in all_config %}
+            <div class="form-group">
+                <label for="{{ config.key }}">{{ config.key }}</label>
+                <input type="text" value="{{ config.value }}" name="{{ config.key }}" id="{{ config.key }}" class="form-control" />
+            </div>
+        {% endfor %}
+        <input type="hidden" value="{{ nonce }}" name="nonce" id="nonce" />
+        <button type="submit" class="btn btn-primary">Update configuration</button>
+    </form>
+</div>
+{% endblock %}

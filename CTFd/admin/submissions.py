@@ -5,6 +5,7 @@ from CTFd.models import Challenges, Submissions
 from CTFd.utils.decorators import admins_only
 from CTFd.utils.helpers.models import build_model_filters
 from CTFd.utils.modes import get_model
+from CTFd.utils.user import get_current_user
 
 
 @admin.route("/admin/submissions", defaults={"submission_type": None})
@@ -16,6 +17,8 @@ def submissions_listing(submission_type):
         filters_by["type"] = submission_type
     filters = []
 
+    current_user = get_current_user()
+    
     q = request.args.get("q")
     field = request.args.get("field")
     page = abs(request.args.get("page", 1, type=int))
@@ -47,6 +50,7 @@ def submissions_listing(submission_type):
     return render_template(
         "admin/submissions.html",
         submissions=submissions,
+        current_user_type = current_user.type,
         prev_page=url_for(
             request.endpoint,
             submission_type=submission_type,

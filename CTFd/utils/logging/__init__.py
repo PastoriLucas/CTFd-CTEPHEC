@@ -16,4 +16,5 @@ def log(logger, format, **kwargs):
     }
     props.update(kwargs)
     msg = format.format(**props)
+    print(msg)
     logger.info(msg)

@@ -5,13 +5,16 @@ from CTFd.models import Pages
 from CTFd.schemas.pages import PageSchema
 from CTFd.utils import markdown
 from CTFd.utils.decorators import admins_only
+from CTFd.utils.user import get_current_user
 
 
 @admin.route("/admin/pages")
 @admins_only
 def pages_listing():
+    
+    current_user = get_current_user()
     pages = Pages.query.all()
-    return render_template("admin/pages.html", pages=pages)
+    return render_template("admin/pages.html", pages=pages,current_user_type = current_user.type,)
 
 
 @admin.route("/admin/pages/new")
@@ -39,11 +42,13 @@ def pages_preview():
 def pages_detail(page_id):
     page = Pages.query.filter_by(id=page_id).first_or_404()
     page_op = request.args.get("operation")
+    
+    current_user = get_current_user()
 
     if request.method == "GET" and page_op == "preview":
         return render_template("page.html", content=markdown(page.content))
 
     if request.method == "GET" and page_op == "create":
-        return render_template("admin/editor.html")
+        return render_template("admin/editor.html",)
 
-    return render_template("admin/editor.html", page=page)
+    return render_template("admin/editor.html", page=page , current_user_type=current_user.type)

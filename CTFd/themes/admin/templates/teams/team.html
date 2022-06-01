@@ -192,6 +192,7 @@
 		{% endfor %}
 
 		<h2 class="text-center">{{ members | length }} members</h2>
+		<h3>Score modifier : {{modifier}} %</h3>
 		<h3 id="team-place" class="text-center">
 			{% if place %}
 				{{ place }}
@@ -200,51 +201,63 @@
 		</h3>
 		<h3 id="team-score" class="text-center">
 			{% if score %}
-				{{ score }}
+				{{ score / 100 * modifier }}
 				<small>points</small>
 			{% endif %}
 		</h3>
-		<hr class="w-50">
-		<div class="pt-3">
-			<a class="edit-team text-dark">
-				<i class="btn-fa fas fa-pencil-alt fa-2x px-2" data-toggle="tooltip" data-placement="top"
-				   title="Edit Team"></i>
-			</a>
-			<a class="invite-team text-dark">
-				<i class="btn-fa fas fa-ticket-alt fa-2x px-2" data-toggle="tooltip" data-placement="top"
-				   title="Team Invite Link"></i>
-			</a>
-			<a class="members-team text-dark">
-				<i class="btn-fa fas fa-user-plus fa-2x px-2" data-toggle="tooltip" data-placement="top"
-				   title="Add Team Members"></i>
-			</a>
-			<a class="edit-captain text-dark">
-				<i class="btn-fa fas fa-user-tag fa-2x px-2" data-toggle="tooltip" data-placement="top"
-				   title="Choose Captain"></i>
-			</a>
-			<a class="award-team text-dark">
-				<i class="btn-fa fas fa-trophy fa-2x px-2" data-toggle="tooltip" data-placement="top" title="Award Team Member"></i>
-			</a>
-			<a class="delete-team text-dark">
-				<i class="btn-fa fas fa-trash-alt fa-2x px-2" data-toggle="tooltip" data-placement="top"
-				   title="Delete Team"></i>
-			</a>
-		</div>
-		<div class="pt-3">
-			<a class="statistics-team text-dark">
-				<i class="btn-fa fas fa-chart-pie fa-2x px-2" data-toggle="tooltip" data-placement="top"
-				   title="Team Statistics"></i>
-			</a>
-			<a class="addresses-team text-dark">
-				<i class="btn-fa fas fa-network-wired fa-2x px-2" data-toggle="tooltip" data-placement="top" title="IP Addresses"></i>
-			</a>
-			{% if team.website %}
-			<a href="{{ team.website }}" target="_blank" class="text-dark" rel="noopener">
-				<i class="btn-fa fas fa-external-link-alt fa-2x px-2" data-toggle="tooltip" data-placement="top"
-					title="{{ team.website }}" aria-hidden="true"></i>
-			</a>
+		<h4>{% if firstblood %}<span type="button" class="badge badge-danger" data-toggle="tooltip" data-placement="bottom" title="This team got firstblood on {{firstblood|length}} challenges">
+				{{firstblood|length}} firstblood</span>
 			{% endif %}
-		</div>
+			{% if categoryBreakdown %}<span type="button" class="badge badge-primary" data-toggle="tooltip" data-placement="bottom" title="This team got categoryBreakdown for these categories: {% for i in categoryBreakdown %}{{i}} {%endfor%}">
+				{{categoryBreakdown|length}} categorybreakdown</span>
+			{% endif %}
+			{% if categoryFirstblood %}<span type="button" class="badge badge-warning" data-toggle="tooltip" data-placement="bottom" title="This team got categoryFirstblood for these categories: {% for i in categoryFirstblood %}{{i}} {%endfor%}">
+				{{categoryFirstblood|length}} categoryfirstblood</span>
+			{% endif %}
+		</h4>	
+		<hr class="w-50">
+		{% if current_user_type == "admin" %}
+			<div class="pt-3">
+				<a class="edit-team text-dark">
+					<i class="btn-fa fas fa-pencil-alt fa-2x px-2" data-toggle="tooltip" data-placement="top"
+					title="Edit Team"></i>
+				</a>
+				<a class="invite-team text-dark">
+					<i class="btn-fa fas fa-ticket-alt fa-2x px-2" data-toggle="tooltip" data-placement="top"
+					title="Team Invite Link"></i>
+				</a>
+				<a class="members-team text-dark">
+					<i class="btn-fa fas fa-user-plus fa-2x px-2" data-toggle="tooltip" data-placement="top"
+					title="Add Team Members"></i>
+				</a>
+				<a class="edit-captain text-dark">
+					<i class="btn-fa fas fa-user-tag fa-2x px-2" data-toggle="tooltip" data-placement="top"
+					title="Choose Captain"></i>
+				</a>
+				<a class="award-team text-dark">
+					<i class="btn-fa fas fa-trophy fa-2x px-2" data-toggle="tooltip" data-placement="top" title="Award Team Member"></i>
+				</a>
+				<a class="delete-team text-dark">
+					<i class="btn-fa fas fa-trash-alt fa-2x px-2" data-toggle="tooltip" data-placement="top"
+					title="Delete Team"></i>
+				</a>
+			</div>
+			<div class="pt-3">
+				<a class="statistics-team text-dark">
+					<i class="btn-fa fas fa-chart-pie fa-2x px-2" data-toggle="tooltip" data-placement="top"
+					title="Team Statistics"></i>
+				</a>
+				<a class="addresses-team text-dark">
+					<i class="btn-fa fas fa-network-wired fa-2x px-2" data-toggle="tooltip" data-placement="top" title="IP Addresses"></i>
+				</a>
+				{% if team.website %}
+				<a href="{{ team.website }}" target="_blank" class="text-dark" rel="noopener">
+					<i class="btn-fa fas fa-external-link-alt fa-2x px-2" data-toggle="tooltip" data-placement="top"
+						title="{{ team.website }}" aria-hidden="true"></i>
+				</a>
+				{% endif %}
+			</div>
+		{% endif %}
 	</div>
 </div>
 
@@ -258,8 +271,11 @@
 					<td class="text-center"></td>
 					<td class="text-center"><b>User Name</b></td>
 					<td class="text-center"><b>E-Mail</b></td>
+					<td class="text-center"><b>Year</b></td>
 					<td class="text-center"><b>Score</b></td>
-					<td class="text-center"></td>
+					{% if current_user_type == "admin" %}
+						<td class="text-center"></td>
+					{%endif%}
 				</tr>
 				</thead>
 				<tbody>
@@ -281,15 +297,20 @@
 							</a>
 						</td>
 						<td class="text-center" data-href="{{ url_for('admin.users_detail', user_id=member.id) }}">
-							{{ member.score }}
+							{{ member.year }}
 						</td>
-						<td class="text-center">
-							<span class="delete-member cursor-pointer" member-id="{{ member.id }}"
-								  member-name="{{ member.name }}" data-toggle="tooltip"
-								  data-placement="top" title="Remove {{ member.name }}">
-								<i class="fas fa-times"></i>
-							</span>
+						<td class="text-center" data-href="{{ url_for('admin.users_detail', user_id=member.id) }}">
+							{{ member.score / 100 * team.modifier }}
 						</td>
+						{% if current_user_type == "admin" %}
+							<td class="text-center">
+								<span class="delete-member cursor-pointer" member-id="{{ member.id }}"
+									member-name="{{ member.name }}" data-toggle="tooltip"
+									data-placement="top" title="Remove {{ member.name }}">
+									<i class="fas fa-times"></i>
+								</span>
+							</td>
+						{%endif%}
 					</tr>
 				{% endfor %}
 				</tbody>
@@ -318,9 +339,11 @@
 				<div class="col-md-12">
 					<div class="float-right pb-3">
 						<div class="btn-group" role="group">
-							<button type="button" class="btn btn-outline-danger" id="solves-delete-button">
-								<i class="btn-fa fas fa-trash-alt"></i>
-							</button>
+							{% if current_user_type == "admin" %}
+								<button type="button" class="btn btn-outline-danger" id="solves-delete-button">
+									<i class="btn-fa fas fa-trash-alt"></i>
+								</button>
+							{% endif %}
 						</div>
 					</div>
 				</div>
@@ -340,7 +363,10 @@
 								<th class="sort-col text-center"><b>Submitted</b></th>
 								<th class="sort-col text-center"><b>Category</b></th>
 								<th class="sort-col text-center"><b>Value</b></th>
+								<th class="sort-col text-center"><b>Modifier</b></th>
+								<th class="sort-col text-center"><b>Basic value</b></th>
 								<th class="sort-col text-center"><b>Time</b></th>
+								<th class="sort-col text-center"><b>Firstblood</b></th>
 							</tr>
 						</thead>
 						<tbody>
@@ -365,9 +391,16 @@
 								</td>
 								<td class="flag" id="{{ solve.id }}"><pre>{{ solve.provided }}</pre></td>
 								<td class="text-center">{{ solve.challenge.category }}</td>
+								<td class="text-center">{{ solve.challenge.value /100 * team.modifier}}</td>
+								<td class="text-center">{{ team.modifier}}%</td>
 								<td class="text-center">{{ solve.challenge.value }}</td>
 								<td class="text-center solve-time">
 									<span data-time="{{ solve.date | isoformat }}"></span>
+								</td>
+								<td>
+									{%if solve.firstblood %}
+										<span class="badge badge-danger">firstblood</span>
+									{%endif%}
 								</td>
 							</tr>
 						{% endfor %}
@@ -383,9 +416,11 @@
 				<div class="col-md-12">
 					<div class="float-right pb-3">
 						<div class="btn-group" role="group">
-							<button type="button" class="btn btn-outline-danger" id="fails-delete-button">
-								<i class="btn-fa fas fa-trash-alt"></i>
-							</button>
+							{% if current_user_type == "admin" %}
+								<button type="button" class="btn btn-outline-danger" id="fails-delete-button">
+									<i class="btn-fa fas fa-trash-alt"></i>
+								</button>
+							{%endif%}
 						</div>
 					</div>
 				</div>
@@ -444,9 +479,11 @@
 				<div class="col-md-12">
 					<div class="float-right pb-3">
 						<div class="btn-group" role="group">
-							<button type="button" class="btn btn-outline-danger" id="awards-delete-button">
-								<i class="btn-fa fas fa-trash-alt"></i>
-							</button>
+							{% if current_user_type == "admin" %}
+								<button type="button" class="btn btn-outline-danger" id="awards-delete-button">
+									<i class="btn-fa fas fa-trash-alt"></i>
+								</button>
+							{%endif%}
 						</div>
 					</div>
 				</div>
@@ -505,9 +542,11 @@
 				<div class="col-md-12">
 					<div class="float-right pb-3">
 						<div class="btn-group" role="group">
-							<button type="button" class="btn btn-outline-success" id="missing-solve-button">
-								<i class="btn-fa fas fa-check"></i>
-							</button>
+							{% if current_user_type == "admin" %}
+								<button type="button" class="btn btn-outline-success" id="missing-solve-button">
+									<i class="btn-fa fas fa-check"></i>
+								</button>
+							{%endif%}
 						</div>
 					</div>
 				</div>
@@ -554,8 +593,10 @@
 
 	<div class="row min-vh-25 pt-5">
 		<div class="col-md-10 offset-md-1">
-			<div id="comment-box">
-			</div>
+			{% if current_user_type == "admin" %}
+				<div id="comment-box">
+				</div>
+			{%endif%}
 		</div>
 	</div>
 </div>

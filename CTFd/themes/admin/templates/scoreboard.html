@@ -11,9 +11,11 @@
 		<div class="col-md-12">
 			<div class="float-right pb-3">
 				<div class="btn-group" role="group">
-					<button type="button" class="btn btn-outline-secondary" id="scoreboard-edit-button" data-toggle="tooltip" title="Hide/Unhide Accounts">
-						<i class="btn-fa fas fa-eye"></i>
-					</button>
+					{% if current_user_type == "admin" %}
+						<button type="button" class="btn btn-outline-secondary" id="scoreboard-edit-button" data-toggle="tooltip" title="Hide/Unhide Accounts">
+							<i class="btn-fa fas fa-eye"></i>
+						</button>
+					{%endif%}
 				</div>
 			</div>
 		</div>

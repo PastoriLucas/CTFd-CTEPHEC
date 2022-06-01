@@ -25,7 +25,7 @@
               <div class="row">
                 <div class="col-md-12">
                   <div class="form-group">
-                    <label>
+                    <label class="text-muted">
                       Hint<br />
                       <small>Markdown &amp; HTML are supported</small>
                     </label>
@@ -39,7 +39,16 @@
                       ref="content"
                     ></textarea>
                   </div>
-
+                  <div class="form-group">
+                    <label>
+                      Type <br />
+                      <small>What type of hint it is (what will you pay).</small>
+                    </label><br>
+                    <input type="radio" id="hint_standard" name="hint_type" value="0" v-model="radio">
+                    <label for="0">Points</label><br>
+                    <input type="radio" id="hint_standard" name="hint_type" value="1" v-model="radio">
+                    <label for="1">Time</label><br>
+                  </div>
                   <div class="form-group">
                     <label>
                       Cost<br />
@@ -51,30 +60,17 @@
                       name="cost"
                       v-model.lazy="cost"
                     />
-                  </div>
-
-                  <div class="form-group">
+                    <div class="form-group">
                     <label>
-                      Requirements<br />
-                      <small
-                        >Hints that must be unlocked before unlocking this
-                        hint</small
-                      >
+                      Time<br />
+                      <small>How much time before the hint release. (mins)</small>
                     </label>
-                    <div
-                      class="form-check"
-                      v-for="hint in otherHints"
-                      :key="hint.id"
-                    >
-                      <label class="form-check-label cursor-pointer">
-                        <input
-                          class="form-check-input"
-                          type="checkbox"
-                          :value="hint.id"
-                          v-model="selectedHints"
-                        />
-                        {{ hint.content }} - {{ hint.cost }}
-                      </label>
+                    <input
+                      type="number"
+                      class="form-control"
+                      name="cost"
+                      v-model.lazy="time"
+                    />
                     </div>
                   </div>
                 </div>
@@ -103,24 +99,15 @@ import { bindMarkdownEditor } from "../../styles";
 export default {
   name: "HintEditForm",
   props: {
-    challenge_id: Number,
-    hint_id: Number,
-    hints: Array
+    hint_id: Number
   },
   data: function() {
     return {
       cost: 0,
-      content: null,
-      selectedHints: []
+      time: 0,
+      radio : "",
+      content: null
     };
-  },
-  computed: {
-    // Get all hints besides the current one
-    otherHints: function() {
-      return this.hints.filter(hint => {
-        return hint.id !== this.$props.hint_id;
-      });
-    }
   },
   watch: {
     hint_id: {
@@ -150,7 +137,8 @@ export default {
             let hint = response.data;
             this.cost = hint.cost;
             this.content = hint.content;
-            this.selectedHints = hint.requirements?.prerequisites || [];
+            this.radio = hint.is_timed;
+            this.time = hint.time;
             // Wait for Vue to update the DOM
             this.$nextTick(() => {
               // Wait a little longer because we need the modal to appear.
@@ -168,17 +156,35 @@ export default {
     getCost: function() {
       return this.cost || 0;
     },
+    getTime: function() {
+      return this.time || 0;
+    },
     getContent: function() {
       return this.$refs.content.value;
     },
+    getRadio: function() {
+      return this.radio 
+    },
     updateHint: function() {
-      let params = {
+      let params = {}
+      if(this.radio == "0"){
+        params = {
         challenge_id: this.$props.challenge_id,
         content: this.getContent(),
         cost: this.getCost(),
-        requirements: { prerequisites: this.selectedHints }
-      };
-
+        is_timed : 0,
+        time : 0,
+        }
+      }
+      if(this.radio == "1"){
+        params = {
+        challenge_id: this.$props.challenge_id,
+        content: this.getContent(),
+        is_timed: 1,
+        time : this.getTime(),
+        cost : 0,
+        }
+      }
       CTFd.fetch(`/api/v1/hints/${this.$props.hint_id}`, {
         method: "PATCH",
         credentials: "same-origin",

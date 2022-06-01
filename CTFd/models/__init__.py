@@ -8,6 +8,8 @@ from sqlalchemy.orm import column_property, validates
 
 from CTFd.cache import cache
 
+
+
 db = SQLAlchemy()
 ma = Marshmallow()
 
@@ -46,6 +48,27 @@ class Notifications(db.Model):
 
     def __init__(self, *args, **kwargs):
         super(Notifications, self).__init__(**kwargs)
+
+
+
+class Explanations(db.Model):
+    __tablename__ = "explanations"
+    id = db.Column(db.Integer, primary_key=True)
+    content = db.Column(db.Text)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
+    challenge_id = db.Column(
+        db.Integer, db.ForeignKey("challenges.id", ondelete="CASCADE")
+    )
+
+    @property
+    def html(self):
+        from CTFd.utils.config.pages import build_markdown
+        from CTFd.utils.helpers import markup
+
+        return markup(build_markdown(self.content))
+
+    def __init__(self, *args, **kwargs):
+        super(Explanations, self).__init__(**kwargs)
 
 
 class Pages(db.Model):
@@ -136,7 +159,7 @@ class Challenges(db.Model):
 
     def __repr__(self):
         return "<Challenge %r>" % self.name
-
+    
 
 class Hints(db.Model):
     __tablename__ = "hints"
@@ -145,6 +168,8 @@ class Hints(db.Model):
     challenge_id = db.Column(
         db.Integer, db.ForeignKey("challenges.id", ondelete="CASCADE")
     )
+    is_timed = db.Column(db.Integer)
+    time = db.Column(db.Integer)
     content = db.Column(db.Text)
     cost = db.Column(db.Integer, default=0)
     requirements = db.Column(db.JSON)
@@ -175,6 +200,13 @@ class Hints(db.Model):
 
     def __repr__(self):
         return "<Hint %r>" % self.content
+    
+class HintsTimer(db.Model):
+    __tablename__ = "hints_timer"
+    id = db.Column(db.Integer, primary_key=True)
+    team_id = db.Column(db.Integer, db.ForeignKey("teams.id", ondelete="CASCADE"))
+    hint_id = db.Column(db.Integer, db.ForeignKey("hints.id", ondelete="CASCADE"))
+    end_time = db.Column(db.DateTime)
 
 
 class Awards(db.Model):
@@ -249,7 +281,6 @@ class ChallengeTopics(db.Model):
     def __init__(self, *args, **kwargs):
         super(ChallengeTopics, self).__init__(**kwargs)
 
-
 class Files(db.Model):
     __tablename__ = "files"
     id = db.Column(db.Integer, primary_key=True)
@@ -275,7 +306,7 @@ class ChallengeFiles(Files):
 
     def __init__(self, *args, **kwargs):
         super(ChallengeFiles, self).__init__(**kwargs)
-
+        
 
 class PageFiles(Files):
     __mapper_args__ = {"polymorphic_identity": "page"}
@@ -314,6 +345,7 @@ class Users(db.Model):
     name = db.Column(db.String(128))
     password = db.Column(db.String(128))
     email = db.Column(db.String(128), unique=True)
+    year = db.Column(db.Float(3))
     type = db.Column(db.String(80))
     secret = db.Column(db.String(128))
 
@@ -377,6 +409,7 @@ class Users(db.Model):
     @property
     def fails(self):
         return self.get_fails(admin=False)
+    
 
     @property
     def awards(self):
@@ -418,7 +451,7 @@ class Users(db.Model):
         return [
             entry for entry in self.field_entries if entry.field.public and entry.value
         ]
-
+    
     def get_solves(self, admin=False):
         from CTFd.utils import get_config
 
@@ -508,6 +541,11 @@ class Users(db.Model):
 class Admins(Users):
     __tablename__ = "admins"
     __mapper_args__ = {"polymorphic_identity": "admin"}
+    
+class Observers(Users):
+    __tablename__ = "observers"
+    __mapper_args__ = {"polymorphic_identity": "observer"}
+
 
 
 class Teams(db.Model):
@@ -521,6 +559,7 @@ class Teams(db.Model):
     email = db.Column(db.String(128), unique=True)
     password = db.Column(db.String(128))
     secret = db.Column(db.String(128))
+    modifier = db.Column(db.Integer)
 
     members = db.relationship(
         "Users", backref="team", foreign_keys="Users.team_id", lazy="joined"
@@ -738,6 +777,7 @@ class Teams(db.Model):
                 return ordinalize(n)
         else:
             return None
+        
 
 
 class Submissions(db.Model):

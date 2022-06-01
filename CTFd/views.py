@@ -56,7 +56,7 @@ from CTFd.utils.security.signing import (
     unserialize,
 )
 from CTFd.utils.uploads import get_uploader, upload_file
-from CTFd.utils.user import authed, get_current_team, get_current_user, is_admin
+from CTFd.utils.user import authed, get_current_user, is_admin, is_observer
 
 views = Blueprint("views", __name__)
 
@@ -75,6 +75,10 @@ def setup():
             set_config("ctf_name", ctf_name)
             set_config("ctf_description", ctf_description)
             set_config("user_mode", user_mode)
+            set_config("first_year_modifier", '100')
+            set_config("second_year_modifier", '100')
+            set_config("third_year_modifier", '100')
+            set_config("old_student_modifier", '100')
 
             # Style
             ctf_logo = request.files.get("ctf_logo")
@@ -150,14 +154,14 @@ def setup():
                 )
 
             admin = Admins(
-                name=name, email=email, password=password, type="admin", hidden=True
+                name=name, email=email, password=password, type="admin", hidden=True, year="3"
             )
 
             # Create an empty index page
             page = Pages(title=None, route="index", content="", draft=False)
 
             # Upload banner
-            default_ctf_banner_location = url_for("views.themes", path="img/logo.png")
+            default_ctf_banner_location = url_for("views.themes", path="img/logo_CTEPHEC.png")
             ctf_banner = request.files.get("ctf_banner")
             if ctf_banner:
                 f = upload_file(file=ctf_banner, page_id=page.id)
@@ -402,7 +406,7 @@ def files(path):
     f = Files.query.filter_by(location=path).first_or_404()
     if f.type == "challenge":
         if challenges_visible():
-            if current_user.is_admin() is False:
+            if current_user.is_admin() is False and current_user.is_observer() is False:
                 if not ctftime():
                     if ctf_ended() and view_after_ctf():
                         pass

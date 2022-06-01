@@ -12,6 +12,7 @@ const roots = {
   'themes/core': {
     'css': {
       'challenge-board': 'assets/css/challenge-board.scss',
+      'succes-board': 'assets/css/succes-board.scss',
       'fonts': 'assets/css/fonts.scss',
       'main': 'assets/css/main.scss',
       'core': 'assets/css/core.scss',
@@ -32,6 +33,8 @@ const roots = {
     'css': {
       'admin': 'assets/css/admin.scss',
       'challenge-board': 'assets/css/challenge-board.scss',
+      'succes-board': 'assets/css/succes-board.scss',
+      'explanation-board': 'assets/css/explanation-board.scss',
       'codemirror': 'assets/css/codemirror.scss',
     },
     'js': {

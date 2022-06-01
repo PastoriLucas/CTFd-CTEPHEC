@@ -15,10 +15,18 @@ class PageEditForm(BaseForm):
     title = StringField(
         "Title", description="This is the title shown on the navigation bar"
     )
+    
+    titleObserver = "Title"
+    titleDescriptionObserver = "This is the title shown on the navigation bar"
+    
     route = StringField(
         "Route",
         description="This is the URL route that your page will be at (e.g. /page). You can also enter links to link to that page.",
     )
+    
+    routeObserver = "Route"
+    routeDescriptionObserver = "This is the URL route that your page will be at (e.g. /page). You can also enter links to link to that page."
+    
     draft = BooleanField("Draft")
     hidden = BooleanField("Hidden")
     auth_required = BooleanField("Authentication Required")
@@ -30,6 +38,9 @@ class PageEditForm(BaseForm):
         validators=[InputRequired()],
         description="The markup format used to render the page",
     )
+    
+    formatObserver = "Format"
+    formatDescriptionObserver= "The markup format used to render the page"
 
 
 class PageFilesUploadForm(BaseForm):

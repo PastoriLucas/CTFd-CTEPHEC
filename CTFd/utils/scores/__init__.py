@@ -1,11 +1,10 @@
 from sqlalchemy.sql.expression import union_all
 
 from CTFd.cache import cache
-from CTFd.models import Awards, Challenges, Solves, Teams, Users, db
+from CTFd.models import Awards, Challenges, Solves, Submissions, Teams, Users, db
 from CTFd.utils import get_config
 from CTFd.utils.dates import unix_time_to_utc
 from CTFd.utils.modes import get_model
-
 
 @cache.memoize(timeout=60)
 def get_standings(count=None, admin=False, fields=None):
@@ -24,11 +23,13 @@ def get_standings(count=None, admin=False, fields=None):
     scores = (
         db.session.query(
             Solves.account_id.label("account_id"),
-            db.func.sum(Challenges.value).label("score"),
+            db.func.sum(Challenges.value / 100 * Teams.modifier).label("score"),
             db.func.max(Solves.id).label("id"),
             db.func.max(Solves.date).label("date"),
+            Teams.modifier.label("modifier"),
         )
         .join(Challenges)
+        .join(Teams,Teams.id==Submissions.team_id)
         .filter(Challenges.value != 0)
         .group_by(Solves.account_id)
     )
@@ -36,10 +37,12 @@ def get_standings(count=None, admin=False, fields=None):
     awards = (
         db.session.query(
             Awards.account_id.label("account_id"),
-            db.func.sum(Awards.value).label("score"),
+            db.func.sum(Awards.value / 100 * Teams.modifier).label("score"),
             db.func.max(Awards.id).label("id"),
             db.func.max(Awards.date).label("date"),
+            Teams.modifier.label("modifier"),
         )
+        .join(Teams,Teams.id==Awards.team_id)
         .filter(Awards.value != 0)
         .group_by(Awards.account_id)
     )
@@ -66,6 +69,7 @@ def get_standings(count=None, admin=False, fields=None):
             db.func.sum(results.columns.score).label("score"),
             db.func.max(results.columns.id).label("id"),
             db.func.max(results.columns.date).label("date"),
+            results.columns.modifier,
         )
         .group_by(results.columns.account_id)
         .subquery()
@@ -88,6 +92,7 @@ def get_standings(count=None, admin=False, fields=None):
                 Model.hidden,
                 Model.banned,
                 sumscores.columns.score,
+                sumscores.columns.modifier,
                 *fields,
             )
             .join(sumscores, Model.id == sumscores.columns.account_id)
@@ -100,6 +105,7 @@ def get_standings(count=None, admin=False, fields=None):
                 Model.oauth_id.label("oauth_id"),
                 Model.name.label("name"),
                 sumscores.columns.score,
+                sumscores.columns.modifier,
                 *fields,
             )
             .join(sumscores, Model.id == sumscores.columns.account_id)
@@ -281,3 +287,4 @@ def get_user_standings(count=None, admin=False, fields=None):
         standings = standings_query.limit(count).all()
 
     return standings
+

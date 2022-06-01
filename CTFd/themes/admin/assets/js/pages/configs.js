@@ -176,12 +176,15 @@ function switchUserMode(event) {
       method: "POST",
       credentials: "same-origin",
       body: formData
+    }).then(function(response) {
+      return response.json();
     });
     // Bind `this` so that we can reuse the updateConfigs function
     let binded = updateConfigs.bind(this);
     binded(event);
   }
 }
+
 
 function removeLogo() {
   ezQuery({
@@ -359,7 +362,12 @@ function importConfig(event) {
         target: pg,
         width: 100
       });
-      location.href = CTFd.config.urlRoot + "/admin/import";
+      setTimeout(function() {
+        pg.modal("hide");
+      }, 500);
+      setTimeout(function() {
+        window.location.reload();
+      }, 700);
     }
   });
 }

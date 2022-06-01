@@ -48,9 +48,11 @@
 		<div class="col-md-12">
 			<div class="float-right pb-3">
 				<div class="btn-group" role="group">
-					<button type="button" class="btn btn-outline-danger" id="submission-delete-button">
-						<i class="btn-fa fas fa-trash-alt"></i>
-					</button>
+					{% if current_user_type == "admin" %}
+						<button type="button" class="btn btn-outline-danger" id="submission-delete-button">
+							<i class="btn-fa fas fa-trash-alt"></i>
+						</button>
+					{%endif%}
 				</div>
 			</div>
 		</div>

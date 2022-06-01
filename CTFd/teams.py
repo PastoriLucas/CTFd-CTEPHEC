@@ -1,8 +1,10 @@
+from webbrowser import get
 from flask import Blueprint, abort, redirect, render_template, request, url_for
+from sqlalchemy import false, true
 
 from CTFd.cache import clear_team_session, clear_user_session
 from CTFd.exceptions import TeamTokenExpiredException, TeamTokenInvalidException
-from CTFd.models import TeamFieldEntries, TeamFields, Teams, db
+from CTFd.models import Challenges, Solves, TeamFieldEntries, TeamFields, Teams, Users, db
 from CTFd.utils import config, get_config, validators
 from CTFd.utils.crypto import verify_password
 from CTFd.utils.decorators import authed_only, ratelimit, registered_only
@@ -169,6 +171,31 @@ def join():
 
             user = get_current_user()
             user.team_id = team.id
+            modifier = 0
+            print(get_config("first_year_modifier"))
+            for i in team.members:
+                if(i.year == 1):
+                    modifier += int(get_config("first_year_modifier"))
+                if(i.year == 2):
+                    modifier += int(get_config("second_year_modifier"))
+                if(i.year == 3):
+                    modifier += int(get_config("third_year_modifier"))
+                if(i.year == 4):
+                    modifier += int(get_config("old_student_modifier"))
+                    
+            if(user.year == 1):
+                modifier += int(get_config("first_year_modifier"))
+            if(user.year == 2):
+                modifier += int(get_config("second_year_modifier"))
+            if(user.year == 3):
+                modifier += int(get_config("third_year_modifier"))
+            if(user.year == 4):
+                modifier += int(get_config("old_student_modifier"))
+                    
+            modifier = modifier/ (len(team.members)  +1)            
+           
+            team.modifier = modifier
+            
             db.session.commit()
 
             if len(team.members) == 1:
@@ -228,7 +255,7 @@ def new():
         affiliation = request.form.get("affiliation")
 
         user = get_current_user()
-
+    
         existing_team = Teams.query.filter_by(name=teamname).first()
         if existing_team:
             errors.append("That team name is already taken")
@@ -280,6 +307,22 @@ def new():
 
         team = Teams(name=teamname, password=passphrase, captain_id=user.id)
 
+       
+        modifier = 0
+        print(get_config("first_year_modifier"))
+    
+        if(user.year == 1):
+            modifier += int(get_config("first_year_modifier"))
+        if(user.year == 2):
+            modifier += int(get_config("second_year_modifier"))
+        if(user.year == 3):
+            modifier += int(get_config("third_year_modifier"))
+        if(user.year == 4):
+            modifier += int(get_config("old_student_modifier"))
+                       
+    
+        team.modifier = modifier
+            
         if website:
             team.website = website
         if affiliation:
@@ -317,10 +360,71 @@ def private():
 
     team = Teams.query.filter_by(id=team_id).first_or_404()
     solves = team.get_solves()
+    print(solves)
     awards = team.get_awards()
+    team_users = Users.query.filter_by(team_id=team.id).all()
 
     place = team.place
     score = team.score
+    
+    firstblood = []
+    categoryBreakdown = []
+    categoryFirstblood = []
+    all_category_of_this_team = []
+    chall_of_this_solve = []
+    solve_per_team = []
+    
+    ## watch out for firstblood and categoryBreakdown and categoryFirstblood
+    for solve in solves :
+        first = True                                               ## allow to watch if we are the first team to succes
+        all_solves_of_a_challenge = Solves.query.filter_by(challenge_id=solve.challenge_id).all() ##get every solves for this challenge
+        chall_of_this_solve = Challenges.query.filter_by(id=solve.challenge_id).first_or_404() ##get the chal for this solve
+        if(len(all_category_of_this_team) != 0 ):                  ## verify if the array is null
+            new = True                                             ## allow to put a new category for this team
+            for i in all_category_of_this_team:                    ## go throught the array which contains every category for this team
+                if(i["name"] == chall_of_this_solve.category):     ## if the category already exist in this array 
+                    i["count"] += 1                                ## add 1 in the count
+                    new = False                                     ## prevent it to be new and add again
+                    if(solve.date > i["time"]):
+                        i["time"] = solve.date
+            if(new):
+                all_category_of_this_team.append({"name" : chall_of_this_solve.category, "count" : 1, "time": solve.date}) ## put a new category for this team
+                
+        else :
+            all_category_of_this_team.append({"name" : chall_of_this_solve.category, "count" : 1, "time": solve.date}) ## put a new category for this team
+
+        for solve_of_a_challenge in all_solves_of_a_challenge:                         ## verify if we are the first to solve it
+            if(solve.date > solve_of_a_challenge.date):
+                first = False
+            if(len(solve_per_team) != 0):
+                new = True
+                for i in solve_per_team:                                                                            ## go throught the array which contains every category for this team
+                    if(i["name"] == chall_of_this_solve.category and i["team_id"] == solve_of_a_challenge.team_id):     ## if the category already exist in this array 
+                        i["count"] += 1                                                                              ## add 1 in the count
+                        new = False                                                                                 ## prevent it to be new and add again
+                        if(solve_of_a_challenge.date > i["time"] and solve_of_a_challenge.team_id == i['team_id']):
+                            i["time"] = solve_of_a_challenge.date
+                if(new):
+                    solve_per_team.append({"team_id" :solve_of_a_challenge.team_id ,"name" : chall_of_this_solve.category, "count" : 1, "time": solve_of_a_challenge.date}) ## put a new category for this team
+                
+            else :
+                solve_per_team.append({"team_id" :solve_of_a_challenge.team_id ,"name" : chall_of_this_solve.category, "count" : 1, "time": solve_of_a_challenge.date}) ## put a new category for this team
+                
+        
+        if(first):                                          ## if we are first, add in firstblood
+            firstblood.append(chall_of_this_solve.name)
+            solve.firstblood = true
+            
+    for category in all_category_of_this_team:
+        firstCategory = True
+        every_chal_with_this_category = Challenges.query.filter_by(category = category["name"]).all() ##get every chal of the same category
+        if(len(every_chal_with_this_category) == category["count"]):
+            categoryBreakdown.append(category["name"])
+            for each_team_solve in solve_per_team:
+                if (len(every_chal_with_this_category) == each_team_solve["count"] and category["time"] > each_team_solve["time"] and category['name'] == each_team_solve["name"]):
+                    firstCategory = False
+            if(firstCategory):
+                categoryFirstblood.append(category["name"])
 
     if config.is_scoreboard_frozen():
         infos.append("Scoreboard has been frozen")
@@ -330,6 +434,9 @@ def private():
         solves=solves,
         awards=awards,
         user=user,
+        firstblood=firstblood,
+        categoryBreakdown=categoryBreakdown,
+        categoryFirstblood=categoryFirstblood,
         team=team,
         score=score,
         place=place,
@@ -352,6 +459,66 @@ def public(team_id):
 
     place = team.place
     score = team.score
+    
+    firstblood = []
+    categoryBreakdown = []
+    categoryFirstblood = []
+    all_category_of_this_team = []
+    chall_of_this_solve = []
+    solve_per_team = []
+    
+   ## watch out for firstblood and categoryBreakdown and categoryFirstblood
+    for solve in solves :
+        first = True                                               ## allow to watch if we are the first team to succes
+        all_solves_of_a_challenge = Solves.query.filter_by(challenge_id=solve.challenge_id).all() ##get every solves for this challenge
+        chall_of_this_solve = Challenges.query.filter_by(id=solve.challenge_id).first_or_404() ##get the chal for this solve
+        if(len(all_category_of_this_team) != 0 ):                  ## verify if the array is null
+            new = True                                             ## allow to put a new category for this team
+            for i in all_category_of_this_team:                    ## go throught the array which contains every category for this team
+                if(i["name"] == chall_of_this_solve.category):     ## if the category already exist in this array 
+                    i["count"] += 1                                ## add 1 in the count
+                    new = False                                     ## prevent it to be new and add again
+                    if(solve.date > i["time"]):
+                        i["time"] = solve.date
+            if(new):
+                all_category_of_this_team.append({"name" : chall_of_this_solve.category, "count" : 1, "time": solve.date}) ## put a new category for this team
+                
+        else :
+            all_category_of_this_team.append({"name" : chall_of_this_solve.category, "count" : 1, "time": solve.date}) ## put a new category for this team
+
+        for solve_of_a_challenge in all_solves_of_a_challenge:                         ## verify if we are the first to solve it
+            if(solve.date > solve_of_a_challenge.date):
+                first = False
+            if(len(solve_per_team) != 0):
+                new = True
+                for i in solve_per_team:                                                                            ## go throught the array which contains every category for this team
+                    if(i["name"] == chall_of_this_solve.category and i["team_id"] == solve_of_a_challenge.team_id):     ## if the category already exist in this array 
+                        i["count"] += 1                                                                              ## add 1 in the count
+                        new = False                                                                                 ## prevent it to be new and add again
+                        if(solve_of_a_challenge.date > i["time"] and solve_of_a_challenge.team_id == i['team_id']):
+                            i["time"] = solve_of_a_challenge.date
+                if(new):
+                    solve_per_team.append({"team_id" :solve_of_a_challenge.team_id ,"name" : chall_of_this_solve.category, "count" : 1, "time": solve_of_a_challenge.date}) ## put a new category for this team
+                
+            else :
+                solve_per_team.append({"team_id" :solve_of_a_challenge.team_id ,"name" : chall_of_this_solve.category, "count" : 1, "time": solve_of_a_challenge.date}) ## put a new category for this team
+                
+        
+        if(first):                                          ## if we are first, add in firstblood
+            firstblood.append(chall_of_this_solve.name)
+            solve.firstblood = true
+            
+    for category in all_category_of_this_team:
+        firstCategory = True
+        every_chal_with_this_category = Challenges.query.filter_by(category = category["name"]).all() ##get every chal of the same category
+        if(len(every_chal_with_this_category) == category["count"]):
+            categoryBreakdown.append(category["name"])
+            for each_team_solve in solve_per_team:
+                if (len(every_chal_with_this_category) == each_team_solve["count"] and category["time"] > each_team_solve["time"] and category['name'] == each_team_solve["name"]):
+                    firstCategory = False
+            if(firstCategory):
+                categoryFirstblood.append(category["name"])
+            
 
     if errors:
         return render_template("teams/public.html", team=team, errors=errors)
@@ -365,6 +532,9 @@ def public(team_id):
         awards=awards,
         team=team,
         score=score,
+        firstblood=firstblood,
+        categoryBreakdown=categoryBreakdown,
+        categoryFirstblood=categoryFirstblood,
         place=place,
         score_frozen=config.is_scoreboard_frozen(),
         infos=infos,

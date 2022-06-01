@@ -193,6 +193,12 @@ export function colorHash(str) {
   return `hsl(${h}, ${s}%, ${l}%)`;
 }
 
+export function htmlEntities(string) {
+  return $("<div/>")
+    .text(string)
+    .html();
+}
+
 export function cumulativeSum(arr) {
   let result = arr.concat();
   for (let i = 0; i < arr.length; i++) {

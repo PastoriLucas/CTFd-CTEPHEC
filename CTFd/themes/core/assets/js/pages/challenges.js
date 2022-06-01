@@ -14,6 +14,10 @@ dayjs.extend(relativeTime);
 CTFd._internal.challenge = {};
 let challenges = [];
 let solves = [];
+let modifier = 0;
+let teamId = 0;
+getModifier()
+
 
 const loadChal = id => {
   const chal = $.grep(challenges, chal => chal.id == id)[0];
@@ -105,6 +109,14 @@ const displayChal = chal => {
       loadHint($(this).data("hint-id"));
     });
 
+    $(".load-timed-hint").on("click", function(_event) {
+      loadTimedHint($(this).data("hint-id"));
+    });
+
+    $(".start-timed-hint").on("click", function(_event) {
+      storeTimedHint($(this).data("challenge-id"));
+    });
+
     $("#challenge-submit").click(function(event) {
       event.preventDefault();
       $("#challenge-submit").addClass("disabled-button");
@@ -115,6 +127,15 @@ const displayChal = chal => {
         .then(loadChals)
         .then(markSolves);
     });
+
+    $("#explanation-submit").on("click", function(e) {
+      e.preventDefault();
+      $("#explanation-submit").addClass("disabled-button");
+      $("#explanation-submit").prop("disabled", true);
+      CTFd._internal.challenge
+        .submitExplanation()
+    });
+
 
     $("#challenge-input").keyup(event => {
       if (event.keyCode == 13) {
@@ -264,17 +285,40 @@ function getSolves(id) {
       const name = data[i].name;
       const date = dayjs(data[i].date).fromNow();
       const account_url = data[i].account_url;
-      box.append(
-        '<tr><td><a href="{0}">{2}</td><td>{3}</td></tr>'.format(
-          account_url,
-          id,
-          htmlEntities(name),
-          date
-        )
-      );
+      
+      if(i==0){
+        box.append(
+          '<tr><td><a href="{0}">{2}</td><td>{3}</td><td><span class="badge badge-danger">firstblood</span></td></tr>'.format(
+            account_url,
+            id,
+            htmlEntities(name),
+            date
+          )
+        );
+      }
+      else{
+        box.append(
+          '<tr><td><a href="{0}">{2}</td><td>{3}</td><td></td></tr>'.format(
+            account_url,
+            id,
+            htmlEntities(name),
+            date
+          )
+        );
+      }
     }
   });
 }
+
+function getModifier(){
+  return CTFd.api.get_team_private().then(function(response)  {
+    let team = response.data
+    modifier = team.modifier
+    teamId = team.id
+    loadChals().then(markSolves)
+  })
+}
+
 
 function loadChals() {
   return CTFd.api.get_challenge_list().then(function(response) {
@@ -336,7 +380,7 @@ function loadChals() {
       }
 
       const chalheader = $("<p>{0}</p>".format(chalinfo.name));
-      const chalscore = $("<span>{0}</span>".format(chalinfo.value));
+      const chalscore = $("<span>{0}</span>".format((chalinfo.value / 100 * modifier).toFixed(2)));
       for (let j = 0; j < chalinfo.tags.length; j++) {
         const tag = "tag-" + chalinfo.tags[j].value.replace(/ /g, "-");
         chalwrap.addClass(tag);
@@ -353,6 +397,7 @@ function loadChals() {
 
     $(".challenge-button").click(function(_event) {
       loadChal(this.value);
+      watchTimedHint(this.value);
     });
   });
 }
@@ -435,20 +480,71 @@ const displayUnlock = id => {
   });
 };
 
+const displayHintConfirmation = response => {
+  console.log(response)
+  ezAlert({
+    title: "Answer",
+    body: response,
+    button: "Got it!"
+  });  
+};
+
 const loadHint = id => {
   CTFd.api.get_hint({ hintId: id }).then(response => {
-    if (!response.success) {
-      let msg = Object.values(response.errors).join("\n");
-      alert(msg);
+    if (response.data.content) {
+      console.log(response.data);
+      displayHint(response.data);
       return;
     }
+    console.log(response.data);
+    displayUnlock(id);
+  });
+};
+
+const watchTimedHint = id => {
+  let chal = id;$
+
+  var body = {
+    'team_id': teamId,
+    'challenge_id' : chal,
+    'hint_id' : 0
+  }
+  var params = {}
+  CTFd.api.watch_hints_timer(params, body).then(response => {
+    if (response.data) {
+      return;
+    }
+  })
+}
+
+const storeTimedHint = id => {
+  let chal = id;$
+
+  var body = {
+    'team_id': teamId,
+    'challenge_id' : chal,
+    'end_time': "",
+    'hint_id' : 0
+  }
+  var params = {}
+
+  CTFd.api.post_hints_timer(params, body).then(response => {
+    if (response.answer) {
+      displayHintConfirmation(response.answer);
+      return;
+    }
+  })
+}
+const loadTimedHint = id => {
+  CTFd.api.get_hint({ hintId: id }).then(response => {
     if (response.data.content) {
       displayHint(response.data);
       return;
     }
-
+    
     displayUnlock(id);
   });
 };
+
 
 window.updateChallengeBoard = update;

@@ -1,0 +1,30 @@
+<div role="tabpanel" class="tab-pane config-section" id="usermodifier">
+	<form method="POST" autocomplete="off" class="w-100">
+		<div >
+			<label for="ctf_name">
+				User modifier
+				<small class="form-text text-muted">Controls how much the points of each type of user will be impacted in percentage</small>
+			</label>
+
+			<div class="form-group">
+				<label for="firstyear">First Year modifier</label>
+				<input class="form-control" id='first_year_modifier' name='first_year_modifier' type='text' {%if first_year_modifier%}value={{first_year_modifier}} {%endif%}>
+			</div>
+			<div class="form-group">
+				<label for="secondyear">Second Year modifier</label>
+				<input class="form-control" id='second_year_modifier' name='second_year_modifier' type='text' {%if second_year_modifier%}value={{second_year_modifier}} {%endif%}>
+			</div>
+			<div class="form-group">
+				<label for="thirdyear">Third Year modifier</label>
+				<input class="form-control" id='third_year_modifier' name='third_year_modifier' type='text' {%if third_year_modifier%}value={{third_year_modifier}} {%endif%}>
+			</div>
+			<div class="form-group">
+				<label for="oldstudent">Old Student modifier</label>
+				<input class="form-control" id='old_student_modifier' name='old_student_modifier' type='text' {%if old_student_modifier%}value={{old_student_modifier}} {%endif%}>
+			</div>
+		</div>
+
+		<button type="submit" class="btn btn-md btn-primary float-right">Update</button>
+	</form>
+</div>
+

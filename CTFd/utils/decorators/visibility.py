@@ -10,7 +10,7 @@ from CTFd.constants.config import (
     ScoreVisibilityTypes,
 )
 from CTFd.utils import get_config
-from CTFd.utils.user import authed, is_admin
+from CTFd.utils.user import authed, is_admin, is_observer
 
 
 def check_score_visibility(f):
@@ -30,7 +30,7 @@ def check_score_visibility(f):
                     return redirect(url_for("auth.login", next=request.full_path))
 
         elif v == ScoreVisibilityTypes.HIDDEN:
-            if is_admin():
+            if is_admin() or is_observer():
                 return f(*args, **kwargs)
             else:
                 if request.content_type == "application/json":
@@ -44,7 +44,7 @@ def check_score_visibility(f):
                     )
 
         elif v == ScoreVisibilityTypes.ADMINS:
-            if is_admin():
+            if is_admin() or is_observer():
                 return f(*args, **kwargs)
             else:
                 abort(404)
@@ -69,7 +69,7 @@ def check_challenge_visibility(f):
                     return redirect(url_for("auth.login", next=request.full_path))
 
         elif v == ChallengeVisibilityTypes.ADMINS:
-            if is_admin():
+            if is_admin() or is_observer():
                 return f(*args, **kwargs)
             else:
                 if authed():
@@ -97,7 +97,7 @@ def check_account_visibility(f):
                     return redirect(url_for("auth.login", next=request.full_path))
 
         elif v == AccountVisibilityTypes.ADMINS:
-            if is_admin():
+            if is_admin() or is_observer():
                 return f(*args, **kwargs)
             else:
                 abort(404)

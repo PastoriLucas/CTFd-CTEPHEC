@@ -1,6 +1,7 @@
 from flask import Blueprint, redirect, render_template, request, url_for
 
 from CTFd.constants.config import ChallengeVisibilityTypes, Configs
+from CTFd.models import Teams
 from CTFd.utils.config import is_teams_mode
 from CTFd.utils.dates import ctf_ended, ctf_paused, ctf_started
 from CTFd.utils.decorators import (
@@ -10,7 +11,7 @@ from CTFd.utils.decorators import (
 )
 from CTFd.utils.decorators.visibility import check_challenge_visibility
 from CTFd.utils.helpers import get_errors, get_infos
-from CTFd.utils.user import authed, get_current_team
+from CTFd.utils.user import authed, get_current_team, get_current_user
 
 challenges = Blueprint("challenges", __name__)
 
@@ -29,7 +30,16 @@ def listing():
     else:
         if is_teams_mode() and get_current_team() is None:
             return redirect(url_for("teams.private", next=request.full_path))
-
+        
+    if(authed() is True):
+        user_team = get_current_team()
+        if (user_team is not None):    
+            modifier = user_team.modifier
+        else : 
+            modifier = 100
+    else : 
+        modifier = 100
+    
     infos = get_infos()
     errors = get_errors()
 
@@ -42,4 +52,4 @@ def listing():
     if ctf_ended() is True:
         infos.append(f"{Configs.ctf_name} has ended")
 
-    return render_template("challenges.html", infos=infos, errors=errors)
+    return render_template("challenges.html", infos=infos, errors=errors, modifier=modifier)

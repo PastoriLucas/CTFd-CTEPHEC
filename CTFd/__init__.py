@@ -186,6 +186,7 @@ def create_app(config="CTFd.config.Config"):
 
         from CTFd.models import (  # noqa: F401
             db,
+            Users,
             Teams,
             Solves,
             Challenges,
@@ -194,6 +195,7 @@ def create_app(config="CTFd.config.Config"):
             Tags,
             Files,
             Tracking,
+            Explanations
         )
 
         url = create_database()

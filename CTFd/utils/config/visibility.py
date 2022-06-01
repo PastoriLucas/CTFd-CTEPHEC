@@ -6,7 +6,7 @@ from CTFd.constants.config import (
     ScoreVisibilityTypes,
 )
 from CTFd.utils import get_config
-from CTFd.utils.user import authed, is_admin
+from CTFd.utils.user import authed, is_admin, is_observer
 
 
 def challenges_visible():
@@ -16,7 +16,8 @@ def challenges_visible():
     elif v == ChallengeVisibilityTypes.PRIVATE:
         return authed()
     elif v == ChallengeVisibilityTypes.ADMINS:
-        return is_admin()
+        return (is_admin() or is_observer())
+
 
 
 def scores_visible():
@@ -28,7 +29,7 @@ def scores_visible():
     elif v == ScoreVisibilityTypes.HIDDEN:
         return False
     elif v == ScoreVisibilityTypes.ADMINS:
-        return is_admin()
+        return (is_admin() or is_observer())
 
 
 def accounts_visible():
@@ -38,7 +39,7 @@ def accounts_visible():
     elif v == AccountVisibilityTypes.PRIVATE:
         return authed()
     elif v == AccountVisibilityTypes.ADMINS:
-        return is_admin()
+        return (is_admin() or is_observer())
 
 
 def registration_visible():

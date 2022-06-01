@@ -40,7 +40,6 @@ def get_current_user_attrs():
     else:
         return None
 
-
 @cache.memoize(timeout=300)
 def get_user_attrs(user_id):
     user = Users.query.filter_by(id=user_id).first()
@@ -129,6 +128,14 @@ def is_admin():
         return user.type == "admin"
     else:
         return False
+    
+def is_observer():
+    if authed():
+        user = get_current_user_attrs()
+        return user.type == "observer"
+    else:
+        return False
+
 
 
 def is_verified():

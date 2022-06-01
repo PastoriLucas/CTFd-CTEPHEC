@@ -19,6 +19,7 @@ admin = Blueprint("admin", __name__)
 
 # isort:imports-firstparty
 from CTFd.admin import challenges  # noqa: F401
+from CTFd.admin import explanations  # noqa: F401
 from CTFd.admin import notifications  # noqa: F401
 from CTFd.admin import pages  # noqa: F401
 from CTFd.admin import scoreboard  # noqa: F401
@@ -30,6 +31,7 @@ from CTFd.cache import cache, clear_config, clear_pages, clear_standings
 from CTFd.models import (
     Awards,
     Challenges,
+    Explanations,
     Configs,
     Notifications,
     Pages,
@@ -47,14 +49,16 @@ from CTFd.utils.csv import dump_csv, load_challenges_csv, load_teams_csv, load_u
 from CTFd.utils.decorators import admins_only
 from CTFd.utils.exports import background_import_ctf
 from CTFd.utils.exports import export_ctf as export_ctf_util
+from CTFd.utils.exports import import_ctf as import_ctf_util
+from CTFd.utils.helpers import get_errors
 from CTFd.utils.security.auth import logout_user
 from CTFd.utils.uploads import delete_file
-from CTFd.utils.user import is_admin
+from CTFd.utils.user import is_admin, is_observer
 
 
 @admin.route("/admin", methods=["GET"])
 def view():
-    if is_admin():
+    if is_admin() or is_observer():
         return redirect(url_for("admin.statistics"))
     return redirect(url_for("auth.login"))
 
@@ -90,22 +94,18 @@ def plugin(plugin):
 @admin.route("/admin/import", methods=["GET", "POST"])
 @admins_only
 def import_ctf():
-    if request.method == "GET":
-        start_time = cache.get("import_start_time")
-        end_time = cache.get("import_end_time")
-        import_status = cache.get("import_status")
-        import_error = cache.get("import_error")
-        return render_template(
-            "admin/import.html",
-            start_time=start_time,
-            end_time=end_time,
-            import_status=import_status,
-            import_error=import_error,
-        )
-    elif request.method == "POST":
-        backup = request.files["backup"]
-        background_import_ctf(backup)
-        return redirect(url_for("admin.import_ctf"))
+    backup = request.files["backup"]
+    errors = get_errors()
+    try:
+        import_ctf_util(backup)
+    except Exception as e:
+        print(e)
+        errors.append(repr(e))
+
+    if errors:
+        return errors[0], 500
+    else:
+        return redirect(url_for("admin.config"))
 
 
 @admin.route("/admin/export", methods=["GET", "POST"])
@@ -171,20 +171,20 @@ def export_csv():
 @admins_only
 def config():
     # Clear the config cache so that we don't get stale values
-    clear_config()
+        clear_config()
 
-    configs = Configs.query.all()
-    configs = {c.key: get_config(c.key) for c in configs}
+        configs = Configs.query.all()
+        configs = {c.key: get_config(c.key) for c in configs}
+        
+        print("reload page")
 
-    themes = ctf_config.get_themes()
-
-    # Remove current theme but ignore failure
+        themes = ctf_config.get_themes()
     try:
         themes.remove(get_config("ctf_theme"))
     except ValueError:
         pass
 
-    return render_template("admin/config.html", themes=themes, **configs)
+        return render_template("admin/config.html", themes=themes, **configs)
 
 
 @admin.route("/admin/reset", methods=["GET", "POST"])
@@ -214,6 +214,11 @@ def reset():
                 for f in c.files:
                     delete_file(file_id=f.id)
             Challenges.query.delete()
+            
+
+            
+        if data.get("explanations"):
+            Explanations.query.delete()  
 
         if data.get("accounts"):
             Users.query.delete()

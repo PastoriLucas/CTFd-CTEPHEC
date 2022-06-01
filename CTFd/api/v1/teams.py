@@ -23,7 +23,7 @@ from CTFd.utils.decorators.visibility import (
     check_score_visibility,
 )
 from CTFd.utils.helpers.models import build_model_filters
-from CTFd.utils.user import get_current_team, get_current_user_type, is_admin
+from CTFd.utils.user import get_current_team, get_current_user_type, is_admin, is_observer
 
 teams_namespace = Namespace("teams", description="Endpoint to retrieve Teams")
 
@@ -268,6 +268,7 @@ class TeamPrivate(Resource):
 
         response.data["place"] = team.place
         response.data["score"] = team.score
+        response.data["modifier"] = team.modifier
         return {"success": True, "data": response.data}
 
     @authed_only
@@ -401,7 +402,7 @@ class TeamMembers(Resource):
     def get(self, team_id):
         team = Teams.query.filter_by(id=team_id).first_or_404()
 
-        view = "admin" if is_admin() else "user"
+        view = "admin" if (is_admin() or is_observer()) else "user"
         schema = TeamSchema(view=view)
         response = schema.dump(team)
 
@@ -436,8 +437,12 @@ class TeamMembers(Resource):
                 },
                 400,
             )
+            
+        if user.year is not None :
+            team.years += user.year
+            db.session.commit()
 
-        view = "admin" if is_admin() else "user"
+        view = "admin" if (is_admin() or is_observer()) else "user"
         schema = TeamSchema(view=view)
         response = schema.dump(team)
 
@@ -471,7 +476,7 @@ class TeamMembers(Resource):
                 400,
             )
 
-        view = "admin" if is_admin() else "user"
+        view = "admin" if (is_admin() or is_observer()) else "user"
         schema = TeamSchema(view=view)
         response = schema.dump(team)
 
@@ -491,7 +496,7 @@ class TeamPrivateSolves(Resource):
         team = get_current_team()
         solves = team.get_solves(admin=True)
 
-        view = "admin" if is_admin() else "user"
+        view = "admin" if (is_admin() or is_observer()) else "user"
         schema = SubmissionSchema(view=view, many=True)
         response = schema.dump(solves)
 
@@ -510,22 +515,19 @@ class TeamPrivateFails(Resource):
         team = get_current_team()
         fails = team.get_fails(admin=True)
 
-        view = "admin" if is_admin() else "user"
+        view = "admin" if (is_admin() or is_observer()) else "user"
 
-        # We want to return the count purely for stats & graphs
-        # but this data isn't really needed by the end user.
-        # Only actually show fail data for admins.
-        if is_admin():
-            schema = SubmissionSchema(view=view, many=True)
-            response = schema.dump(fails)
+        schema = SubmissionSchema(view=view, many=True)
+        response = schema.dump(fails)
 
-            if response.errors:
-                return {"success": False, "errors": response.errors}, 400
+        if response.errors:
+            return {"success": False, "errors": response.errors}, 400
 
+        if is_admin() or is_observer():
             data = response.data
         else:
             data = []
-        count = len(fails)
+        count = len(response.data)
 
         return {"success": True, "data": data, "meta": {"count": count}}
 
@@ -544,8 +546,7 @@ class TeamPrivateAwards(Resource):
         if response.errors:
             return {"success": False, "errors": response.errors}, 400
 
-        count = len(response.data)
-        return {"success": True, "data": response.data, "meta": {"count": count}}
+        return {"success": True, "data": response.data}
 
 
 @teams_namespace.route("/<team_id>/solves")
@@ -556,19 +557,18 @@ class TeamPublicSolves(Resource):
     def get(self, team_id):
         team = Teams.query.filter_by(id=team_id).first_or_404()
 
-        if (team.banned or team.hidden) and is_admin() is False:
+        if (team.banned or team.hidden) and (is_admin() or is_observer()) is False:
             abort(404)
-        solves = team.get_solves(admin=is_admin())
+        solves = team.get_solves(admin=(is_admin() or is_observer()))
 
-        view = "admin" if is_admin() else "user"
+        view = "admin" if (is_admin() or is_observer()) else "user"
         schema = SubmissionSchema(view=view, many=True)
         response = schema.dump(solves)
 
         if response.errors:
             return {"success": False, "errors": response.errors}, 400
 
-        count = len(response.data)
-        return {"success": True, "data": response.data, "meta": {"count": count}}
+        return {"success": True, "data": response.data}
 
 
 @teams_namespace.route("/<team_id>/fails")
@@ -579,26 +579,23 @@ class TeamPublicFails(Resource):
     def get(self, team_id):
         team = Teams.query.filter_by(id=team_id).first_or_404()
 
-        if (team.banned or team.hidden) and is_admin() is False:
+        if (team.banned or team.hidden) and (is_admin() or is_observer()) is False:
             abort(404)
-        fails = team.get_fails(admin=is_admin())
+        fails = team.get_fails(admin=(is_admin() or is_observer()))
 
-        view = "admin" if is_admin() else "user"
+        view = "admin" if (is_admin() or is_observer()) else "user"
 
-        # We want to return the count purely for stats & graphs
-        # but this data isn't really needed by the end user.
-        # Only actually show fail data for admins.
-        if is_admin():
-            schema = SubmissionSchema(view=view, many=True)
-            response = schema.dump(fails)
+        schema = SubmissionSchema(view=view, many=True)
+        response = schema.dump(fails)
 
-            if response.errors:
-                return {"success": False, "errors": response.errors}, 400
+        if response.errors:
+            return {"success": False, "errors": response.errors}, 400
 
+        if (is_admin() or is_observer()):
             data = response.data
         else:
             data = []
-        count = len(fails)
+        count = len(response.data)
 
         return {"success": True, "data": data, "meta": {"count": count}}
 
@@ -611,9 +608,9 @@ class TeamPublicAwards(Resource):
     def get(self, team_id):
         team = Teams.query.filter_by(id=team_id).first_or_404()
 
-        if (team.banned or team.hidden) and is_admin() is False:
+        if (team.banned or team.hidden) and (is_admin() or is_observer()) is False:
             abort(404)
-        awards = team.get_awards(admin=is_admin())
+        awards = team.get_awards(admin=(is_admin() or is_observer()))
 
         schema = AwardSchema(many=True)
         response = schema.dump(awards)
@@ -621,5 +618,4 @@ class TeamPublicAwards(Resource):
         if response.errors:
             return {"success": False, "errors": response.errors}, 400
 
-        count = len(response.data)
-        return {"success": True, "data": response.data, "meta": {"count": count}}
+        return {"success": True, "data": response.data}

@@ -193,6 +193,7 @@ def register():
         name = request.form.get("name", "").strip()
         email_address = request.form.get("email", "").strip().lower()
         password = request.form.get("password", "").strip()
+        year = request.form.get("year","").strip()
 
         website = request.form.get("website")
         affiliation = request.form.get("affiliation")
@@ -264,12 +265,16 @@ def register():
 
         if not valid_email:
             errors.append("Please enter a valid email address")
+            
+    
+            
         if email.check_email_is_whitelisted(email_address) is False:
             errors.append(
                 "Only email addresses under {domains} may register".format(
                     domains=get_config("domain_whitelist")
                 )
             )
+            
         if names:
             errors.append("That user name is already taken")
         if team_name_email_check is True:
@@ -296,10 +301,11 @@ def register():
                 name=request.form["name"],
                 email=request.form["email"],
                 password=request.form["password"],
+                year=request.form["year"]
             )
         else:
             with app.app_context():
-                user = Users(name=name, email=email_address, password=password)
+                user = Users(name=name, email=email_address, password=password, year=year)
 
                 if website:
                     user.website = website

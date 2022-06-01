@@ -13,9 +13,11 @@ from CTFd.cache import clear_standings, clear_user_session
 from CTFd.constants import RawEnum
 from CTFd.models import (
     Awards,
+    Configs,
     Notifications,
     Solves,
     Submissions,
+    Teams,
     Tracking,
     Unlocks,
     Users,
@@ -33,7 +35,8 @@ from CTFd.utils.decorators.visibility import (
 from CTFd.utils.email import sendmail, user_created_notification
 from CTFd.utils.helpers.models import build_model_filters
 from CTFd.utils.security.auth import update_user
-from CTFd.utils.user import get_current_user, get_current_user_type, is_admin
+from CTFd.utils.user import get_current_user, get_current_user_type, is_admin, is_observer
+
 
 users_namespace = Namespace("users", description="Endpoint to retrieve Users")
 
@@ -99,7 +102,7 @@ class UserList(Resource):
         field = str(query_args.pop("field", None))
         filters = build_model_filters(model=Users, query=q, field=field)
 
-        if is_admin() and request.args.get("view") == "admin":
+        if (is_admin() or is_observer()) and request.args.get("view") == "admin":
             users = (
                 Users.query.filter_by(**query_args)
                 .filter(*filters)
@@ -161,8 +164,9 @@ class UserList(Resource):
             name = response.data.name
             email = response.data.email
             password = req.get("password")
+            year = response.data.year
 
-            user_created_notification(addr=email, name=name, password=password)
+            user_created_notification(addr=email, name=name, password=password, year=year)
 
         clear_standings()
 
@@ -188,7 +192,7 @@ class UserPublic(Resource):
     def get(self, user_id):
         user = Users.query.filter_by(id=user_id).first_or_404()
 
-        if (user.banned or user.hidden) and is_admin() is False:
+        if (user.banned or user.hidden) and (is_admin() or is_observer()) is False:
             abort(404)
 
         user_type = get_current_user_type(fallback="user")
@@ -215,6 +219,7 @@ class UserPublic(Resource):
     )
     def patch(self, user_id):
         user = Users.query.filter_by(id=user_id).first_or_404()
+        team = Teams.query.filter_by(id=user.team_id).first_or_404()
         data = request.get_json()
         data["id"] = user_id
 
@@ -231,12 +236,36 @@ class UserPublic(Resource):
         response = schema.load(data)
         if response.errors:
             return {"success": False, "errors": response.errors}, 400
+        
 
         # This generates the response first before actually changing the type
         # This avoids an error during User type changes where we change
         # the polymorphic identity resulting in an ObjectDeletedError
         # https://github.com/CTFd/CTFd/issues/1794
         response = schema.dump(response.data)
+        db.session.commit()
+        
+        
+        first_year_modifier = Configs.query.filter_by(key="first_year_modifier").first_or_404()
+        second_year_modifier = Configs.query.filter_by(key="second_year_modifier").first_or_404()
+        third_year_modifier = Configs.query.filter_by(key="third_year_modifier").first_or_404()
+        old_student_modifier = Configs.query.filter_by(key="old_student_modifier").first_or_404()
+
+        modifier = 0
+        
+        for member in team.members:
+            if(member.year == 1):
+                modifier += int(first_year_modifier.value)
+            if(member.year == 2):
+                modifier += int(second_year_modifier.value)
+            if(member.year == 3):
+                modifier += int(third_year_modifier.value)
+            if(member.year == 4):
+                modifier += int(old_student_modifier.value)
+                
+        modifier = modifier/ (len(team.members))             
+    
+        team.modifier = modifier
         db.session.commit()
         db.session.close()
 
@@ -333,7 +362,7 @@ class UserPrivateSolves(Resource):
         user = get_current_user()
         solves = user.get_solves(admin=True)
 
-        view = "user" if not is_admin() else "admin"
+        view = "user" if not (is_admin() or is_observer()) else "admin"
         response = SubmissionSchema(view=view, many=True).dump(solves)
 
         if response.errors:
@@ -350,21 +379,19 @@ class UserPrivateFails(Resource):
         user = get_current_user()
         fails = user.get_fails(admin=True)
 
-        view = "user" if not is_admin() else "admin"
+        view = "user" if not (is_admin() or is_observer()) else "admin"
 
-        # We want to return the count purely for stats & graphs
-        # but this data isn't really needed by the end user.
-        # Only actually show fail data for admins.
-        if is_admin():
+        if response.errors:
+            return {"success": False, "errors": response.errors}, 400
             response = SubmissionSchema(view=view, many=True).dump(fails)
-            if response.errors:
-                return {"success": False, "errors": response.errors}, 400
+        if is_admin():
 
+        if (is_admin() or is_observer()):
             data = response.data
         else:
             data = []
+        count = len(response.data)
 
-        count = len(fails)
         return {"success": True, "data": data, "meta": {"count": count}}
 
 
@@ -376,7 +403,7 @@ class UserPrivateAwards(Resource):
         user = get_current_user()
         awards = user.get_awards(admin=True)
 
-        view = "user" if not is_admin() else "admin"
+        view = "user" if not (is_admin() or is_observer()) else "admin"
         response = AwardSchema(view=view, many=True).dump(awards)
 
         if response.errors:
@@ -394,12 +421,12 @@ class UserPublicSolves(Resource):
     def get(self, user_id):
         user = Users.query.filter_by(id=user_id).first_or_404()
 
-        if (user.banned or user.hidden) and is_admin() is False:
+        if (user.banned or user.hidden) and (is_admin() or is_observer()) is False:
             abort(404)
 
-        solves = user.get_solves(admin=is_admin())
+        solves = user.get_solves(admin=(is_admin() or is_observer()))
 
-        view = "user" if not is_admin() else "admin"
+        view = "user" if not (is_admin() or is_observer()) else "admin"
         response = SubmissionSchema(view=view, many=True).dump(solves)
 
         if response.errors:
@@ -417,23 +444,20 @@ class UserPublicFails(Resource):
     def get(self, user_id):
         user = Users.query.filter_by(id=user_id).first_or_404()
 
-        if (user.banned or user.hidden) and is_admin() is False:
+        if (user.banned or user.hidden) and (is_admin() or is_observer()) is False:
             abort(404)
-        fails = user.get_fails(admin=is_admin())
+        fails = user.get_fails(admin=(is_admin() or is_observer()))
 
-        view = "user" if not is_admin() else "admin"
+        view = "user" if not (is_admin() or is_observer()) else "admin"
+        response = SubmissionSchema(view=view, many=True).dump(fails)
+        if response.errors:
+            return {"success": False, "errors": response.errors}, 400
 
-        # We want to return the count purely for stats & graphs
-        # but this data isn't really needed by the end user.
-        # Only actually show fail data for admins.
-        if is_admin():
-            response = SubmissionSchema(view=view, many=True).dump(fails)
-            if response.errors:
-                return {"success": False, "errors": response.errors}, 400
-
+        if (is_admin() or is_observer()):
             data = response.data
         else:
             data = []
+        count = len(response.data)
 
         count = len(fails)
         return {"success": True, "data": data, "meta": {"count": count}}
@@ -447,11 +471,11 @@ class UserPublicAwards(Resource):
     def get(self, user_id):
         user = Users.query.filter_by(id=user_id).first_or_404()
 
-        if (user.banned or user.hidden) and is_admin() is False:
+        if (user.banned or user.hidden) and (is_admin() or is_observer()) is False:
             abort(404)
-        awards = user.get_awards(admin=is_admin())
+        awards = user.get_awards(admin=(is_admin() or is_observer()))
 
-        view = "user" if not is_admin() else "admin"
+        view = "user" if not (is_admin() or is_observer()) else "admin"
         response = AwardSchema(view=view, many=True).dump(awards)
 
         if response.errors:

@@ -195,6 +195,7 @@ def register_user(
     name="user",
     email="user@examplectf.com",
     password="password",
+    year=1,
     raise_for_error=True,
 ):
     with app.app_context():
@@ -205,6 +206,7 @@ def register_user(
                     "name": name,
                     "email": email,
                     "password": password,
+                    "year" : year,
                     "nonce": sess.get("nonce"),
                 }
             client.post("/register", data=data)
@@ -388,9 +390,9 @@ def gen_flag(db, challenge_id, content="flag", type="static", data=None, **kwarg
 
 
 def gen_user(
-    db, name="user_name", email="user@examplectf.com", password="password", **kwargs
+    db, name="user_name", email="user@examplectf.com", year=2, password="password", **kwargs
 ):
-    user = Users(name=name, email=email, password=password, **kwargs)
+    user = Users(name=name, email=email, password=password, year=year, **kwargs)
     db.session.add(user)
     db.session.commit()
     return user
@@ -401,13 +403,14 @@ def gen_team(
     name="team_name",
     email="team@examplectf.com",
     password="password",
+    modifier = 100,
     member_count=4,
     **kwargs
 ):
-    team = Teams(name=name, email=email, password=password, **kwargs)
+    team = Teams(name=name, email=email, password=password, modifier=modifier, **kwargs)
     for i in range(member_count):
         name = "user-{}-{}".format(random_string(), str(i))
-        user = gen_user(db, name=name, email=name + "@examplectf.com", team_id=team.id)
+        user = gen_user(db, name=name, email=name + "@examplectf.com", year=2, team_id=team.id)
         if i == 0:
             team.captain_id = user.id
         team.members.append(user)
@@ -417,10 +420,10 @@ def gen_team(
 
 
 def gen_hint(
-    db, challenge_id, content="This is a hint", cost=0, type="standard", **kwargs
+    db, challenge_id, content="This is a hint", cost=0, is_timed=0, type="standard", **kwargs
 ):
     hint = Hints(
-        challenge_id=challenge_id, content=content, cost=cost, type=type, **kwargs
+        challenge_id=challenge_id, content=content, cost=cost, is_timed=is_timed, type=type, **kwargs
     )
     db.session.add(hint)
     db.session.commit()

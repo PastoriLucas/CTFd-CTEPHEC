@@ -10,7 +10,7 @@ from CTFd.models import Tokens, db
 from CTFd.schemas.tokens import TokenSchema
 from CTFd.utils.decorators import authed_only, require_verified_emails
 from CTFd.utils.security.auth import generate_user_token
-from CTFd.utils.user import get_current_user, get_current_user_type, is_admin
+from CTFd.utils.user import get_current_user, get_current_user_type, is_admin, is_observer
 
 tokens_namespace = Namespace("tokens", description="Endpoint to retrieve Tokens")
 
@@ -117,7 +117,7 @@ class TokenDetail(Resource):
         },
     )
     def get(self, token_id):
-        if is_admin():
+        if (is_admin() or is_observer()):
             token = Tokens.query.filter_by(id=token_id).first_or_404()
         else:
             token = Tokens.query.filter_by(

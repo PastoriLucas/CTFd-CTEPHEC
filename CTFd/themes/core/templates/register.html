@@ -46,6 +46,13 @@
 						Password used to log into your account
 					</small>
 				</div>
+				<div class="form-group">
+					<b>{{ form.year.label }}</b>
+					{{ form.year(class="form-control", value=year) }}
+					<small class="form-text text-muted">
+						which year are you in ? (1, 2 or 3)
+					</small>
+				</div>
 				{{ form.nonce() }}
 
 				{{ render_extra_fields(form.extra) }}

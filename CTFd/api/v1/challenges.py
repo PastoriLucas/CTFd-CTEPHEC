@@ -3,20 +3,23 @@ from typing import List
 
 from flask import abort, render_template, request, url_for
 from flask_restx import Namespace, Resource
-from sqlalchemy import func as sa_func
+from sqlalchemy import func as sa_func, modifier
 from sqlalchemy.sql import and_, false, true
+from CTFd.api.v1.explanations import Explanation
 
 from CTFd.api.v1.helpers.request import validate_args
 from CTFd.api.v1.helpers.schemas import sqlalchemy_to_pydantic
 from CTFd.api.v1.schemas import APIDetailedSuccessResponse, APIListSuccessResponse
 from CTFd.cache import clear_standings
 from CTFd.constants import RawEnum
-from CTFd.models import ChallengeFiles as ChallengeFilesModel
-from CTFd.models import Challenges
+from CTFd.models import ChallengeFiles as ChallengeFilesModel, HintsTimer
+from CTFd.models import Challenges, Explanations
 from CTFd.models import ChallengeTopics as ChallengeTopicsModel
 from CTFd.models import Fails, Flags, Hints, HintUnlocks, Solves, Submissions, Tags, db
 from CTFd.plugins.challenges import CHALLENGE_CLASSES, get_chal_class
+from CTFd.plugins.explanations import BaseExplanation
 from CTFd.schemas.challenges import ChallengeSchema
+from CTFd.schemas.explanations import ExplanationSchema
 from CTFd.schemas.flags import FlagSchema
 from CTFd.schemas.hints import HintSchema
 from CTFd.schemas.tags import TagSchema
@@ -48,6 +51,7 @@ from CTFd.utils.user import (
     get_current_user,
     get_current_user_attrs,
     is_admin,
+    is_observer
 )
 
 challenges_namespace = Namespace(
@@ -176,7 +180,7 @@ class ChallengeList(Resource):
         # TODO: Convert this into a re-useable decorator
         # TODO: The require_team decorator doesnt work because of no admin passthru
         if get_current_user_attrs():
-            if is_admin():
+            if is_admin() or is_observer():
                 pass
             else:
                 if config.is_teams_mode() and get_current_team_attrs() is None:
@@ -249,6 +253,7 @@ class ChallengeList(Resource):
                                 "name": "???",
                                 "value": 0,
                                 "solves": None,
+                                "modifier" : 100,
                                 "solved_by_me": False,
                                 "category": "???",
                                 "tags": [],
@@ -273,6 +278,7 @@ class ChallengeList(Resource):
                     "name": challenge.name,
                     "value": challenge.value,
                     "solves": solve_counts.get(challenge.id, solve_count_dfl),
+                    "modifier" : 100,
                     "solved_by_me": challenge.id in user_solves,
                     "category": challenge.category,
                     "tags": tag_schema.dump(challenge.tags).data,
@@ -347,7 +353,8 @@ class Challenge(Resource):
         },
     )
     def get(self, challenge_id):
-        if is_admin():
+        modifier = 100
+        if is_admin() or is_observer():
             chal = Challenges.query.filter(Challenges.id == challenge_id).first_or_404()
         else:
             chal = Challenges.query.filter(
@@ -382,6 +389,7 @@ class Challenge(Resource):
                 else:
                     # We need to handle the case where a user is viewing challenges anonymously
                     solve_ids = []
+                    modifier = 100
                 solve_ids = {value for value, in solve_ids}
                 prereqs = set(requirements).intersection(all_challenge_ids)
                 if solve_ids >= prereqs or is_admin():
@@ -396,6 +404,7 @@ class Challenge(Resource):
                                 "name": "???",
                                 "value": 0,
                                 "solves": None,
+                                "modifier": 100,
                                 "solved_by_me": False,
                                 "category": "???",
                                 "tags": [],
@@ -413,12 +422,17 @@ class Challenge(Resource):
 
         unlocked_hints = set()
         hints = []
+        hints_timer = []
         if authed():
             user = get_current_user()
             team = get_current_team()
-
+            
+            if (team is not None) :
+                modifier = team.modifier
+            else :
+                modifier = 100
             # TODO: Convert this into a re-useable decorator
-            if is_admin():
+            if is_admin() or is_observer():
                 pass
             else:
                 if config.is_teams_mode() and team is None:
@@ -446,10 +460,21 @@ class Challenge(Resource):
         for hint in Hints.query.filter_by(challenge_id=chal.id).all():
             if hint.id in unlocked_hints or ctf_ended():
                 hints.append(
-                    {"id": hint.id, "cost": hint.cost, "content": hint.content}
+                    {"id": hint.id, "cost": hint.cost, "content": hint.content, "time":hint.time, "is_timed":hint.is_timed, "challenge_id":hint.challenge_id}
                 )
+                for hint_timer in HintsTimer.query.filter_by(hint_id=hint.id).all():
+                    hints_timer.append(
+                        {"id": hint_timer.id, "team_id": hint_timer.team_id, "hint_id": hint_timer.hint_id, "end_time":hint_timer.end_time.strftime("%H:%M:%S")}
+                    )
             else:
-                hints.append({"id": hint.id, "cost": hint.cost})
+                hints.append({"id": hint.id, "cost": hint.cost , "time":hint.time, "is_timed":hint.is_timed, "challenge_id":hint.challenge_id})
+                for hint_timer in HintsTimer.query.filter_by(hint_id=hint.id).all():
+                    hints_timer.append(
+                        {"id": hint_timer.id, "team_id": hint_timer.team_id, "hint_id": hint_timer.hint_id, "end_time":hint_timer.end_time.strftime("%H:%M:%S")}
+                    )
+                            
+        
+           
 
         response = chal_class.read(challenge=chal)
 
@@ -461,6 +486,7 @@ class Challenge(Resource):
         if maybe_row:
             challenge_id, solve_count = maybe_row
             solved_by_user = challenge_id in user_solves
+
         else:
             solve_count, solved_by_user = 0, False
 
@@ -482,6 +508,7 @@ class Challenge(Resource):
         response["files"] = files
         response["tags"] = tags
         response["hints"] = hints
+        response["hints_timer"] = hints_timer
 
         response["view"] = render_template(
             chal_class.templates["view"].lstrip("/"),
@@ -489,7 +516,9 @@ class Challenge(Resource):
             solved_by_me=solved_by_user,
             files=files,
             tags=tags,
+            modifier=modifier,
             hints=[Hints(**h) for h in hints],
+            hints_timer = hints_timer,
             max_attempts=chal.max_attempts,
             attempts=attempts,
             challenge=chal,
@@ -674,6 +703,13 @@ class ChallengeAttempt(Resource):
                     chal_class.solve(
                         user=user, team=team, challenge=challenge, request=request
                     )
+                    print(challenge)
+                    hint = Hints.query.filter_by(challenge_id=challenge.id).all()
+                    for s in range(len(hint)):
+                        sameHintsTimerHint = HintsTimer.query.filter_by(hint_id = hint[s].id).first()
+                        if(sameHintsTimerHint):
+                            db.session.delete(sameHintsTimerHint)
+                            db.session.commit()
                     clear_standings()
 
                 log(
@@ -885,3 +921,33 @@ class ChallengeRequirements(Resource):
     def get(self, challenge_id):
         challenge = Challenges.query.filter_by(id=challenge_id).first_or_404()
         return {"success": True, "data": challenge.requirements}
+    
+@challenges_namespace.route("/explanation")
+class ChallengeExplanation(Resource):
+    @check_challenge_visibility
+    @during_ctf_time_only
+    @require_verified_emails
+    def post(self):
+        
+        user = get_current_user()     
+        user = {'user_id' : user.id}
+        
+        req = request.get_json()
+        schema = ExplanationSchema(view="user")
+        req.update(user)
+        
+        print(schema)
+        print(req)
+        response = schema.load(req, session=db.session)
+        print(response)
+        print(response.data)
+
+        if response.errors:
+            return {"success": False, "errors": response.errors}, 400
+
+        db.session.add(response.data)
+        db.session.commit()
+
+        response = schema.dump(response.data)
+
+        return {"success": True, "data": response.data}

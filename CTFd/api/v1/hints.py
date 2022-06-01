@@ -11,7 +11,7 @@ from CTFd.models import Hints, HintUnlocks, db
 from CTFd.schemas.hints import HintSchema
 from CTFd.utils.decorators import admins_only, authed_only, during_ctf_time_only
 from CTFd.utils.helpers.models import build_model_filters
-from CTFd.utils.user import get_current_user, is_admin
+from CTFd.utils.user import get_current_user, is_admin, is_observer
 
 hints_namespace = Namespace("hints", description="Endpoint to retrieve Hints")
 
@@ -54,6 +54,8 @@ class HintList(Resource):
             "challenge_id": (int, None),
             "content": (str, None),
             "cost": (int, None),
+            "is_timed": (int, None),
+            "time":(int, None),
             "q": (str, None),
             "field": (
                 RawEnum("HintFields", {"type": "type", "content": "content"}),
@@ -89,7 +91,11 @@ class HintList(Resource):
     def post(self):
         req = request.get_json()
         schema = HintSchema(view="admin")
+        print(schema)
+        print(req)
         response = schema.load(req, session=db.session)
+        print(response)
+        print(response.data)
 
         if response.errors:
             return {"success": False, "errors": response.errors}, 400
@@ -162,8 +168,16 @@ class Hint(Resource):
             ).first()
             if unlocked:
                 view = "unlocked"
+                
+        if hint.time:
+            view = "locked"
+            unlocked = HintUnlocks.query.filter_by(
+                account_id=user.account_id, target=hint.id
+            ).first()
+            if unlocked:
+                view = "unlocked"
 
-        if is_admin():
+        if is_admin() or is_observer():
             if request.args.get("preview", False):
                 view = "admin"
 

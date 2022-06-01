@@ -4,6 +4,7 @@
 {% endblock %}
 
 {% block content %}
+{% set team = user.team %}
 	<div class="jumbotron">
 		<div class="container">
 			<h1>{{ user.name }}</h1>
@@ -53,9 +54,20 @@
 				</h2>
 				<h2 class="text-center">
 					{% if account.place %}
-						{{ account.score }} <small>points</small>
+						{{ '%0.2f'| format(account.score / 100 * team.modifier) }} <small>points</small>
 					{% endif %}
 				</h2>
+				<h4>
+					{% if firstblood %}<span type="button" class="badge badge-danger" data-toggle="tooltip" data-placement="bottom" title="This team got firstblood on {{firstblood|length}} challenges">
+						{{firstblood|length}} firstblood</span>
+					{% endif %}
+					{% if categoryBreakdown %}<span type="button" class="badge badge-primary" data-toggle="tooltip" data-placement="bottom" title="This team got categoryBreakdown for these categories: {% for i in categoryBreakdown %}{{i}} {%endfor%}">
+						{{categoryBreakdown|length}} categorybreakdown</span>
+					{% endif %}
+					{% if categoryFirstblood %}<span type="button" class="badge badge-warning" data-toggle="tooltip" data-placement="bottom" title="This team got categoryFirstblood for these categories: {% for i in categoryFirstblood %}{{i}} {%endfor%}">
+						{{categoryFirstblood|length}} categoryfirstblood</span>
+					{% endif %}
+				</h4>	
 			</div>
 
 			<div class="pt-3">
@@ -130,7 +142,10 @@
 							<td><b>Challenge</b></td>
 							<td class="d-none d-md-block d-lg-block"><b>Category</b></td>
 							<td><b>Value</b></td>
+							<td><b>Modifier</b></td>
+							<td><b>Basic value</b></td>
 							<td><b>Time</b></td>
+							<td><b>Firstblood</b></td>
 						</tr>
 						</thead>
 						<tbody>
@@ -142,9 +157,16 @@
 									</a>
 								</td>
 								<td class="d-none d-md-block d-lg-block">{{ solve.challenge.category }}</td>
-								<td>{{ solve.challenge.value }}</td>
+								<td>{{ '%0.2f'| format(solve.challenge.value / 100 * team.modifier)}}</td>
+								<td>{{ team.modifier }}%</td>
+								<td>{{ solve.challenge.value}}</td>
 								<td class="solve-time">
 									<span data-time="{{ solve.date | isoformat }}"></span>
+								</td>
+								<td>
+									{%if solve.firstblood %}
+										<span class="badge badge-danger">firstblood</span>
+									{%endif%}
 								</td>
 							</tr>
 						{% endfor %}

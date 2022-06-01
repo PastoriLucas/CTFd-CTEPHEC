@@ -16,8 +16,7 @@ test:
 		--ignore-glob="**/node_modules/" \
 		--ignore=node_modules/ \
 		-W ignore::sqlalchemy.exc.SADeprecationWarning \
-		-W ignore::sqlalchemy.exc.SAWarning \
-		-n auto
+		-W ignore::sqlalchemy.exc.SAWarning 
 	bandit -r CTFd -x CTFd/uploads --skip B105,B322
 	pipdeptree
 	yarn verify

@@ -166,8 +166,8 @@ class TeamSearchForm(BaseForm):
         choices=[
             ("name", "Name"),
             ("id", "ID"),
-            ("affiliation", "Affiliation"),
-            ("website", "Website"),
+            ##("affiliation", "Affiliation"),
+            ##("website", "Website"),
         ],
         default="name",
         validators=[InputRequired()],
@@ -181,8 +181,8 @@ class PublicTeamSearchForm(BaseForm):
         "Search Field",
         choices=[
             ("name", "Name"),
-            ("affiliation", "Affiliation"),
-            ("website", "Website"),
+            ##("affiliation", "Affiliation"),
+            ##("website", "Website"),
         ],
         default="name",
         validators=[InputRequired()],

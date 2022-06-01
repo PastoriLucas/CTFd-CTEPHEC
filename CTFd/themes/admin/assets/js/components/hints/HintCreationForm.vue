@@ -6,7 +6,7 @@
           <div class="container">
             <div class="row">
               <div class="col-md-12">
-                <h3>Hint</h3>
+                <h3>Hints</h3>
               </div>
             </div>
           </div>
@@ -25,7 +25,7 @@
               <div class="row">
                 <div class="col-md-12">
                   <div class="form-group">
-                    <label>
+                    <label class="text-muted">
                       Hint<br />
                       <small>Markdown &amp; HTML are supported</small>
                     </label>
@@ -40,7 +40,18 @@
 
                   <div class="form-group">
                     <label>
-                      Cost<br />
+                      Type <br />
+                      <small>What type of hint it is (what will you pay).</small>
+                    </label><br>
+                    <input type="radio" id="hint_standard" name="hint_type" value="0" v-model="radio">
+                    <label for="points">Points</label><br>
+                    <input type="radio" id="hint_standard" name="hint_type" value="1" v-model="radio">
+                    <label for="time">Time</label><br>
+                  </div>
+
+                  <div class="form-group">
+                    <label>
+                      Cost<br/>
                       <small>How many points it costs to see your hint.</small>
                     </label>
                     <input
@@ -50,31 +61,19 @@
                       v-model.lazy="cost"
                     />
                   </div>
-
                   <div class="form-group">
-                    <label>
-                      Requirements<br />
-                      <small
-                        >Hints that must be unlocked before unlocking this
-                        hint</small
-                      >
-                    </label>
-                    <div
-                      class="form-check"
-                      v-for="hint in hints"
-                      :key="hint.id"
-                    >
-                      <label class="form-check-label cursor-pointer">
-                        <input
-                          class="form-check-input"
-                          type="checkbox"
-                          :value="hint.id"
-                          v-model="selectedHints"
-                        />
-                        {{ hint.cost }} - {{ hint.id }}
-                      </label>
-                    </div>
+                  <label>
+                    Time<br/>
+                    <small>How much time before the hint release. (sec)</small>
+                  </label>
+                  <input
+                    type="number"
+                    class="form-control"
+                    name="time"
+                    v-model.lazy="time"
+                  />
                   </div>
+                  
                   <input type="hidden" id="hint-id-for-hint" name="id" />
                 </div>
               </div>
@@ -105,7 +104,8 @@ export default {
   data: function() {
     return {
       cost: 0,
-      selectedHints: []
+      time: 0,
+      radio : "",
     };
   },
   methods: {
@@ -115,13 +115,30 @@ export default {
     getContent: function() {
       return this.$refs.content.value;
     },
+    getTime: function() {
+      return this.time;
+    },
     submitHint: function() {
-      let params = {
+      let params = {}
+      if(this.radio == "0"){
+        params = {
         challenge_id: this.$props.challenge_id,
         content: this.getContent(),
         cost: this.getCost(),
         requirements: { prerequisites: this.selectedHints }
       };
+        }
+      }
+      if(this.radio == "1"){
+        params = {
+        challenge_id: this.$props.challenge_id,
+        content: this.getContent(),
+        is_timed: 1,
+        time : this.getTime(),
+        cost : 0,
+        }
+      }
+    
       CTFd.fetch("/api/v1/hints", {
         method: "POST",
         credentials: "same-origin",

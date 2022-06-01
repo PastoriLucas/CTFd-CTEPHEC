@@ -26,7 +26,7 @@ def test_hint_team_unlock():
         team.members.append(user)
         team.members.append(second_user)
         chal = gen_challenge(app.db)
-        gen_hint(app.db, chal.id, content="hint", cost=1, type="standard")
+        gen_hint(app.db, chal.id, content="hint", cost=1, is_timed=0, type="standard")
         # Give the points to the user that doesn't unlock
         # Users that unlock hints should be able to unlock but cost their team points
         gen_award(app.db, user_id=3, team_id=team.id)

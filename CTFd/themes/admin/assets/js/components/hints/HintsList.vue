@@ -25,6 +25,7 @@
           <td class="text-center"><b>ID</b></td>
           <td class="text-center"><b>Hint</b></td>
           <td class="text-center"><b>Cost</b></td>
+          <td class="text-center"><b>Time</b></td>
           <td class="text-center"><b>Settings</b></td>
         </tr>
       </thead>
@@ -35,6 +36,7 @@
             <pre>{{ hint.content }}</pre>
           </td>
           <td class="text-center">{{ hint.cost }}</td>
+          <td class="text-center">{{ hint.time }}</td>
           <td class="text-center">
             <i
               role="button"

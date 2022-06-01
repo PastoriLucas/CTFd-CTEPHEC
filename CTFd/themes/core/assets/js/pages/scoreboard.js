@@ -12,6 +12,7 @@ const updateScores = () => {
   CTFd.api.get_scoreboard_list().then(response => {
     const teams = response.data;
     table.empty();
+    console.log(teams)
 
     for (let i = 0; i < teams.length; i++) {
       const row = [
@@ -27,6 +28,12 @@ const updateScores = () => {
         "</a></td>",
         "<td>",
         teams[i].score,
+        "</td>",
+        "<td>",
+        teams[i].modifier + "%",
+        "</td>",
+        "<td>",
+        teams[i].unmodified_score ,
         "</td>",
         "</tr>"
       ].join("");

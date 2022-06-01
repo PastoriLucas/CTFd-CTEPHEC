@@ -6,6 +6,7 @@ RUN mkdir -p /opt/CTFd /var/log/CTFd /var/uploads
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         build-essential \
+        python3-dev \
         libffi-dev \
         libssl-dev \
         git \

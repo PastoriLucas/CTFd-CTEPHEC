@@ -9,7 +9,7 @@ class HintSchema(ma.ModelSchema):
         dump_only = ("id", "type", "html")
 
     views = {
-        "locked": ["id", "type", "challenge", "challenge_id", "cost"],
+        "locked": ["id", "type", "challenge", "challenge_id", "cost","is_timed", "time"],
         "unlocked": [
             "id",
             "type",
@@ -18,6 +18,8 @@ class HintSchema(ma.ModelSchema):
             "content",
             "html",
             "cost",
+            "is_timed",
+            "time",
         ],
         "admin": [
             "id",
@@ -27,6 +29,8 @@ class HintSchema(ma.ModelSchema):
             "content",
             "html",
             "cost",
+            "is_timed",
+            "time",
             "requirements",
         ],
     }

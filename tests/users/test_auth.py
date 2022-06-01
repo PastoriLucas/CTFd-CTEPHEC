@@ -445,6 +445,7 @@ def test_registration_code_required():
                     "name": "user",
                     "email": "user1@examplectf.com",
                     "password": "password",
+                    "year" : 1,
                     "nonce": sess.get("nonce"),
                 }
             # Attempt registration without password
@@ -485,6 +486,7 @@ def test_registration_code_allows_numeric():
                     "name": "user",
                     "email": "user1@examplectf.com",
                     "password": "password",
+                    "year" : 1,
                     "nonce": sess.get("nonce"),
                 }
 

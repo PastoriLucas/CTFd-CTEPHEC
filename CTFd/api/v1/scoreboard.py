@@ -4,7 +4,7 @@ from flask_restx import Namespace, Resource
 from sqlalchemy import select
 
 from CTFd.cache import cache, make_cache_key
-from CTFd.models import Awards, Solves, Users, db
+from CTFd.models import Awards, Solves, Teams, Users, db
 from CTFd.utils import get_config
 from CTFd.utils.dates import isoformat, unix_time_to_utc
 from CTFd.utils.decorators.visibility import (
@@ -68,6 +68,8 @@ class ScoreboardList(Resource):
                 "oauth_id": x.oauth_id,
                 "name": x.name,
                 "score": int(x.score),
+                "modifier" : x.modifier,
+                "unmodified_score" : (int(x.score) / int(x.modifier)) * 100
             }
 
             if mode == TEAMS_MODE:
@@ -101,17 +103,28 @@ class ScoreboardDetail(Resource):
 
         solves = solves.all()
         awards = awards.all()
+        
+    
 
         # Build a mapping of accounts to their solves and awards
         solves_mapper = defaultdict(list)
         for solve in solves:
+            modifier_query = (
+                db.session.query(
+                    Teams.modifier.label("modifier"),
+                )
+                .filter(Teams.id == solve.team_id)
+            )
+            modifier = modifier_query.first()
+            
             solves_mapper[solve.account_id].append(
                 {
                     "challenge_id": solve.challenge_id,
                     "account_id": solve.account_id,
                     "team_id": solve.team_id,
                     "user_id": solve.user_id,
-                    "value": solve.challenge.value,
+                    "value": (solve.challenge.value / 100 )* modifier.modifier,
+                    "modifier": modifier,
                     "date": isoformat(solve.date),
                 }
             )

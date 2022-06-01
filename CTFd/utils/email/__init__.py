@@ -114,7 +114,7 @@ def successful_registration_notification(addr):
     return sendmail(addr=addr, text=text, subject=subject)
 
 
-def user_created_notification(addr, name, password):
+def user_created_notification(addr, name, password, year):
     text = safe_format(
         get_config("user_creation_email_body") or DEFAULT_USER_CREATION_EMAIL_BODY,
         ctf_name=get_config("ctf_name"),
@@ -122,6 +122,7 @@ def user_created_notification(addr, name, password):
         url=url_for("views.static_html", _external=True),
         name=name,
         password=password,
+        year=year,
     )
 
     subject = safe_format(

@@ -736,6 +736,91 @@ let API = (function() {
 
     return deferred.promise;
   };
+  
+  /**
+  *
+  * @method
+  * @name API#post_explanation
+  * @param {object} parameters - method options and parameters
+  */
+  API.prototype.post_explanation = function(parameters, body) {
+    if (parameters === undefined) {
+      parameters = {};
+    }
+    let deferred = Q.defer();
+    let domain = this.domain,
+      path = "/challenges/explanation";
+    if (body === undefined) {
+      let body = {};
+    }
+    let queryParameters = {};
+    let headers = {};
+    let form = {};
+  
+    headers["Accept"] = ["application/json"];
+    headers["Content-Type"] = ["application/json"];
+  
+    queryParameters = mergeQueryParams(parameters, queryParameters);
+  
+    this.request(
+      "POST",
+      domain + path,
+      parameters,
+      body,
+      headers,
+      queryParameters,
+      form,
+      deferred
+    );
+  
+    return deferred.promise;
+  };
+
+    /**
+   *
+   * @method
+   * @name API#delete_explanation
+   * @param {object} parameters - method options and parameters
+   * @param {string} parameters.explanationId - An Award ID
+   */
+     API.prototype.delete_explanation = function(parameters) {
+      if (parameters === undefined) {
+        parameters = {};
+      }
+      let deferred = Q.defer();
+      let domain = this.domain,
+        path = "/explanations/{explanation_id}";
+      let body = {},
+        queryParameters = {},
+        headers = {},
+        form = {};
+  
+      headers["Accept"] = ["application/json"];
+      headers["Content-Type"] = ["application/json"];
+  
+      path = path.replace("{explanation_id}", parameters["explanationId"]);
+  
+      if (parameters["explanationId"] === undefined) {
+        deferred.reject(new Error("Missing required  parameter: explanationId"));
+        return deferred.promise;
+      }
+  
+      queryParameters = mergeQueryParams(parameters, queryParameters);
+  
+      this.request(
+        "DELETE",
+        domain + path,
+        parameters,
+        body,
+        headers,
+        queryParameters,
+        form,
+        deferred
+      );
+  
+      return deferred.promise;
+    };
+
   /**
    *
    * @method
@@ -790,6 +875,7 @@ let API = (function() {
       headers = {},
       form = {};
 
+      console.log('api oui')
     headers["Accept"] = ["application/json"];
     headers["Content-Type"] = ["application/json"];
 
@@ -1613,6 +1699,83 @@ let API = (function() {
 
     this.request(
       "GET",
+      domain + path,
+      parameters,
+      body,
+      headers,
+      queryParameters,
+      form,
+      deferred
+    );
+
+    return deferred.promise;
+  };
+  /**
+   *
+   * @method
+   * @name API#post_hints_timer
+   * @param {object} parameters - method options and parameters
+   */
+  API.prototype.post_hints_timer = function(parameters, body) {
+    if (parameters === undefined) {
+      parameters = {};
+    }
+    if (body === undefined) {
+      body = {}
+    }
+    let deferred = Q.defer();
+    let domain = this.domain,
+      path = "/hintsTimer",
+      queryParameters = {},
+      headers = {},
+      form = {};
+
+    headers["Accept"] = ["application/json"];
+    headers["Content-Type"] = ["application/json"];
+
+    queryParameters = mergeQueryParams(parameters, queryParameters);
+
+    this.request(
+      "POST",
+      domain + path,
+      parameters,
+      body,
+      headers,
+      queryParameters,
+      form,
+      deferred
+    );
+
+    return deferred.promise;
+  };
+  /**
+   *
+   * @method
+   * @name API#watch_hints_timer
+   * @param {object} parameters - method options and parameters
+   */
+   API.prototype.watch_hints_timer = function(parameters, body) {
+    if (parameters === undefined) {
+      parameters = {};
+    }
+    if (body === undefined) {
+      body = {}
+    }
+    let deferred = Q.defer();
+
+    let domain = this.domain,
+      path = "/hintsTimer/watch_hintsTimer",
+      queryParameters = {},
+      headers = {},
+      form = {};
+
+    headers["Accept"] = ["application/json"];
+    headers["Content-Type"] = ["application/json"];
+
+    queryParameters = mergeQueryParams(parameters, queryParameters);
+
+    this.request(
+      "POST",
       domain + path,
       parameters,
       body,
@@ -3588,6 +3751,283 @@ let API = (function() {
 
     if (parameters["userId"] === undefined) {
       deferred.reject(new Error("Missing required  parameter: userId"));
+      return deferred.promise;
+    }
+
+    queryParameters = mergeQueryParams(parameters, queryParameters);
+
+    this.request(
+      "GET",
+      domain + path,
+      parameters,
+      body,
+      headers,
+      queryParameters,
+      form,
+      deferred
+    );
+
+    return deferred.promise;
+  };
+
+  /**
+   *
+   * @method
+   * @name API#post_succes_list
+   * @param {object} parameters - method options and parameters
+   */
+   API.prototype.post_succes_list = function(parameters) {
+    if (parameters === undefined) {
+      parameters = {};
+    }
+    let deferred = Q.defer();
+    let domain = this.domain,
+      path = "/succes";
+    let body = {},
+      queryParameters = {},
+      headers = {},
+      form = {};
+
+    headers["Accept"] = ["application/json"];
+    headers["Content-Type"] = ["application/json"];
+
+    queryParameters = mergeQueryParams(parameters, queryParameters);
+
+    this.request(
+      "POST",
+      domain + path,
+      parameters,
+      body,
+      headers,
+      queryParameters,
+      form,
+      deferred
+    );
+
+    return deferred.promise;
+  };
+  /**
+   *
+   * @method
+   * @name API#get_succes_list
+   * @param {object} parameters - method options and parameters
+   */
+  API.prototype.get_succes_list = function(parameters) {
+    if (parameters === undefined) {
+      parameters = {};
+    }
+    let deferred = Q.defer();
+    let domain = this.domain,
+      path = "/succes";
+    let body = {},
+      queryParameters = {},
+      headers = {},
+      form = {};
+
+    headers["Accept"] = ["application/json"];
+    headers["Content-Type"] = ["application/json"];
+
+    queryParameters = mergeQueryParams(parameters, queryParameters);
+
+    this.request(
+      "GET",
+      domain + path,
+      parameters,
+      body,
+      headers,
+      queryParameters,
+      form,
+      deferred
+    );
+
+    return deferred.promise;
+  };
+  /**
+   *
+   * @method
+   * @name API#post_succes_attempt
+   * @param {object} parameters - method options and parameters
+   */
+  API.prototype.post_succes_attempt = function(parameters) {
+    if (parameters === undefined) {
+      parameters = {};
+    }
+    let deferred = Q.defer();
+    let domain = this.domain,
+      path = "/succes/attempt";
+    let body = {},
+      queryParameters = {},
+      headers = {},
+      form = {};
+
+    headers["Accept"] = ["application/json"];
+    headers["Content-Type"] = ["application/json"];
+
+    queryParameters = mergeQueryParams(parameters, queryParameters);
+
+    this.request(
+      "POST",
+      domain + path,
+      parameters,
+      body,
+      headers,
+      queryParameters,
+      form,
+      deferred
+    );
+
+    return deferred.promise;
+  };
+  /**
+   *
+   * @method
+   * @name API#get_succes_types
+   * @param {object} parameters - method options and parameters
+   */
+  API.prototype.get_succes_types = function(parameters) {
+    if (parameters === undefined) {
+      parameters = {};
+    }
+    let deferred = Q.defer();
+    let domain = this.domain,
+      path = "/succes/types";
+    let body = {},
+      queryParameters = {},
+      headers = {},
+      form = {};
+
+    headers["Accept"] = ["application/json"];
+    headers["Content-Type"] = ["application/json"];
+
+    queryParameters = mergeQueryParams(parameters, queryParameters);
+
+    this.request(
+      "GET",
+      domain + path,
+      parameters,
+      body,
+      headers,
+      queryParameters,
+      form,
+      deferred
+    );
+
+    return deferred.promise;
+  };
+  /**
+   *
+   * @method
+   * @name API#patch_succes
+   * @param {object} parameters - method options and parameters
+   * @param {string} parameters.succesId - A Succes ID
+   */
+  API.prototype.patch_succes = function(parameters) {
+    if (parameters === undefined) {
+      parameters = {};
+    }
+    let deferred = Q.defer();
+    let domain = this.domain,
+      path = "/succes/{succes_id}";
+    let body = {},
+      queryParameters = {},
+      headers = {},
+      form = {};
+
+    headers["Accept"] = ["application/json"];
+    headers["Content-Type"] = ["application/json"];
+
+    path = path.replace("{succes_id}", parameters["succesId"]);
+
+    if (parameters["succesId"] === undefined) {
+      deferred.reject(new Error("Missing required  parameter: succesId"));
+      return deferred.promise;
+    }
+
+    queryParameters = mergeQueryParams(parameters, queryParameters);
+
+    this.request(
+      "PATCH",
+      domain + path,
+      parameters,
+      body,
+      headers,
+      queryParameters,
+      form,
+      deferred
+    );
+
+    return deferred.promise;
+  };
+  /**
+   *
+   * @method
+   * @name API#delete_succes
+   * @param {object} parameters - method options and parameters
+   * @param {string} parameters.succesId - A Succes ID
+   */
+  API.prototype.delete_succes = function(parameters) {
+    if (parameters === undefined) {
+      parameters = {};
+    }
+    let deferred = Q.defer();
+    let domain = this.domain,
+      path = "/succes/{succes_id}";
+    let body = {},
+      queryParameters = {},
+      headers = {},
+      form = {};
+
+    headers["Accept"] = ["application/json"];
+    headers["Content-Type"] = ["application/json"];
+
+    path = path.replace("{succes_id}", parameters["succesId"]);
+
+    if (parameters["succesId"] === undefined) {
+      deferred.reject(new Error("Missing required  parameter: succesId"));
+      return deferred.promise;
+    }
+
+    queryParameters = mergeQueryParams(parameters, queryParameters);
+
+    this.request(
+      "DELETE",
+      domain + path,
+      parameters,
+      body,
+      headers,
+      queryParameters,
+      form,
+      deferred
+    );
+
+    return deferred.promise;
+  };
+  /**
+   *
+   * @method
+   * @name API#get_succes
+   * @param {object} parameters - method options and parameters
+   * @param {string} parameters.succesId - A Succes ID
+   */
+  API.prototype.get_succes = function(parameters) {
+    if (parameters === undefined) {
+      parameters = {};
+    }
+    let deferred = Q.defer();
+    let domain = this.domain,
+      path = "/succes/{succes_id}";
+    let body = {},
+      queryParameters = {},
+      headers = {},
+      form = {};
+
+    headers["Accept"] = ["application/json"];
+    headers["Content-Type"] = ["application/json"];
+
+    path = path.replace("{succes_id}", parameters["succesId"]);
+
+    if (parameters["succesId"] === undefined) {
+      deferred.reject(new Error("Missing required  parameter: succesId"));
       return deferred.promise;
     }
 

@@ -7,11 +7,13 @@
 <div class="jumbotron">
 	<div class="container">
 		<h1>Teams
-			<span class="create-team" role="button" data-toggle="tooltip" title="Create Team">
-				<a href="{{ url_for('admin.teams_new') }}" style="color: inherit;">
-					<i class="btn-fa fas fa-plus-circle"></i>
-				</a>
-			</span>
+			{% if current_user_type == "admin" %}
+				<span class="create-team" role="button" data-toggle="tooltip" title="Create Team">
+					<a href="{{ url_for('admin.teams_new') }}" style="color: inherit;">
+						<i class="btn-fa fas fa-plus-circle"></i>
+					</a>
+				</span>
+			{% endif %}
 		</h1>
 	</div>
 </div>
@@ -52,12 +54,14 @@
 		<div class="col-md-12">
 			<div class="float-right pb-3">
 				<div class="btn-group" role="group">
-					<button type="button" class="btn btn-outline-secondary" data-toggle="tooltip" title="Edit Teams" id="teams-edit-button">
-						<i class="btn-fa fas fa-pencil-alt"></i>
-					</button>
-					<button type="button" class="btn btn-outline-danger" data-toggle="tooltip" title="Delete Teams" id="teams-delete-button">
-						<i class="btn-fa fas fa-trash-alt"></i>
-					</button>
+					{% if current_user_type == "admin" %}
+						<button type="button" class="btn btn-outline-secondary" data-toggle="tooltip" title="Edit Teams" id="teams-edit-button">
+							<i class="btn-fa fas fa-pencil-alt"></i>
+						</button>
+						<button type="button" class="btn btn-outline-danger" data-toggle="tooltip" title="Delete Teams" id="teams-delete-button">
+							<i class="btn-fa fas fa-trash-alt"></i>
+						</button>
+					{% endif %}
 				</div>
 			</div>
 		</div>
@@ -75,7 +79,8 @@
 						</th>
 						<th class="sort-col text-center"><b>ID</b></th>
 						<th class="sort-col text-left"><b>Team</b></th>
-						<th class="sort-col text-center"><b>Country</b></th>
+						<th class="sort-col text-left"><b>Modifier</b></th>
+						<!--<th class="sort-col text-center"><b>Country</b></th>-->
 						<th class="sort-col text-center px-0"><b>Hidden</b></th>
 						<th class="sort-col text-center px-0"><b>Banned</b></th>
 					</tr>
@@ -98,6 +103,9 @@
 									<span class="badge badge-primary">Official</span>
 								</a>
 							{% endif %}
+							<td>
+								<a>{{team.modifier}} %</a>
+							</td>
 							{% if team.website %}
 								<a href="{{ team.website }}" target="_blank" class="badge badge-info" rel="noopener">
 									<i class="btn-fa fas fa-external-link-alt" data-toggle="tooltip" data-placement="top"
@@ -112,14 +120,14 @@
 								</small>
 							</span>
 						</td>
-						<td class="team-country text-center" value="{{ team.country if team.country is not none }}">
+						<!--<td class="team-country text-center" value="{{ team.country if team.country is not none }}">
 							<span>
 								{% if team.country %}
 									<i class="flag-{{ team.country.lower() }}"></i>
 									<small>{{ lookup_country_code(team.country) }}</small>
 								{% endif %}
 							</span>
-						</td>
+						</td>-->
 
 						<td class="team-hidden d-md-table-cell d-lg-table-cell text-center" value="{{ team.hidden }}">
 							{% if team.hidden %}

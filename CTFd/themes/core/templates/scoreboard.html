@@ -25,6 +25,8 @@
 						<td scope="col" width="10px"><b>Place</b></td>
 						<td scope="col"><b>{{ get_mode_as_word(capitalize=True) }}</b></td>
 						<td scope="col"><b>Score</b></td>
+						<td scope='col'><b>Modifier</b></td>
+						<td scope="col"><b>Unmodified score</b></td>
 					</tr>
 				</thead>
 				<tbody>
@@ -48,7 +50,9 @@
 								{% endif %}
 							</a>
 						</td>
-						<td>{{ standing.score }}</td>
+						<td>{{ standing.score |int}}</td>
+						<td><a>{{standing.modifier}} %</a></td>
+						<td>{{ (standing.score / standing.modifier * 100) |int}}</td>
 					</tr>
 				{% endfor %}
 				</tbody>

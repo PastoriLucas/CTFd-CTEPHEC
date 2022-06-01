@@ -6,9 +6,11 @@ from marshmallow import ValidationError
 
 from CTFd.models import Users
 from CTFd.utils.countries import lookup_country_code
-from CTFd.utils.user import get_current_user, is_admin
+from CTFd.utils.user import get_current_user, is_admin, is_observer
 
 EMAIL_REGEX = r"(^[^@\s]+@[^@\s]+\.[^@\s]+$)"
+
+
 
 
 def is_safe_url(target):
@@ -25,9 +27,11 @@ def validate_email(email):
     return bool(re.match(EMAIL_REGEX, email))
 
 
+
+
 def unique_email(email, model=Users):
     obj = model.query.filter_by(email=email).first()
-    if is_admin():
+    if is_admin() or is_observer():
         if obj:
             raise ValidationError("Email address has already been used")
     if obj and obj.id != get_current_user().id:
