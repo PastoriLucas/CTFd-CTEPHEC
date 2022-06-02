@@ -179,10 +179,11 @@ def config():
         print("reload page")
 
         themes = ctf_config.get_themes()
-    try:
-        themes.remove(get_config("ctf_theme"))
-    except ValueError:
-        pass
+
+        try:
+            themes.remove(get_config("ctf_theme"))
+        except ValueError:
+            pass
 
         return render_template("admin/config.html", themes=themes, **configs)
 

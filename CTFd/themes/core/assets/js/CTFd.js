@@ -5,6 +5,7 @@ import { API } from "./api";
 import "./patch";
 import MarkdownIt from "markdown-it";
 import $ from "jquery";
+import dayjs from "dayjs";
 import ezq from "./ezq";
 import { getScript, htmlEntities, createHtmlNode } from "./utils";
 

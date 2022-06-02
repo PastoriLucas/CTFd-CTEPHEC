@@ -2,7 +2,7 @@ import json
 from enum import Enum
 
 import cmarkgfm
-from cmarkgfm.cmark import Options
+from cmarkgfm.cmark import Options as cmarkgfmoptions
 from flask import current_app as app
 
 # isort:imports-firstparty
@@ -17,8 +17,8 @@ binary_type = bytes
 def markdown(md):
     return cmarkgfm.markdown_to_html_with_extensions(
         md,
+        #options=cmarkgfmoptions.CMARK_OPT_SAFE,
         extensions=["autolink", "table", "strikethrough"],
-        options=Options.CMARK_OPT_UNSAFE,
     )
 
 

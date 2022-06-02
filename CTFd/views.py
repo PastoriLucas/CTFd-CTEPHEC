@@ -56,7 +56,7 @@ from CTFd.utils.security.signing import (
     unserialize,
 )
 from CTFd.utils.uploads import get_uploader, upload_file
-from CTFd.utils.user import authed, get_current_user, is_admin, is_observer
+from CTFd.utils.user import authed, get_current_team, get_current_user, is_admin, is_observer
 
 views = Blueprint("views", __name__)
 

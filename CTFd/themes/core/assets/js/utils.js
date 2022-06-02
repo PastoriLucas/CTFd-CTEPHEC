@@ -322,9 +322,3 @@ export function createHtmlNode(html) {
   template.innerHTML = html.trim();
   return template.content.firstChild;
 }
-
-export function htmlEntities(string) {
-  return $("<div/>")
-    .text(string)
-    .html();
-}

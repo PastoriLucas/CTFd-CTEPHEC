@@ -3,7 +3,8 @@ from sqlalchemy import false, true
 from sqlalchemy.sql import not_
 
 from CTFd.admin import admin
-from CTFd.models import Challenges, Solves, Teams, Tracking
+from CTFd.models import Challenges, Solves, Teams, Tracking, db
+from CTFd.utils import get_config
 from CTFd.utils.decorators import admins_only
 from CTFd.utils.user import get_current_user
 
@@ -18,6 +19,8 @@ def teams_listing():
 
     current_user = get_current_user()
     
+    all_teams = Teams.query.all()
+    
     if q:
         # The field exists as an exposed column
         if Teams.__mapper__.has_property(field):
@@ -29,6 +32,13 @@ def teams_listing():
         .paginate(page=page, per_page=50)
     )
 
+    
+    for team in all_teams:
+        if (team.modifier is None):     
+           
+            team.modifier = 100
+            db.session.commit()
+                
     args = dict(request.args)
     args.pop("page", 1)
 
@@ -145,7 +155,21 @@ def teams_detail(team_id):
                 if(firstCategory):
                     categoryFirstblood.append(category["name"])
         
-        modifier = team.modifier
+        modifier = 0
+        for member in team.members:
+            if(member.year == 1):
+                modifier += int(get_config("first_year_modifier"))
+            if(member.year == 2):
+                modifier += int(get_config("second_year_modifier"))
+            if(member.year == 3):
+                modifier += int(get_config("third_year_modifier"))
+            if(member.year == 4):
+                modifier += int(get_config("old_student_modifier"))
+                
+        modifier = modifier/ (len(team.members))            
+        
+        team.modifier = modifier
+        db.session.commit()
         
     else:
         modifier = 100 

@@ -438,9 +438,6 @@ class TeamMembers(Resource):
                 400,
             )
             
-        if user.year is not None :
-            team.years += user.year
-            db.session.commit()
 
         view = "admin" if (is_admin() or is_observer()) else "user"
         schema = TeamSchema(view=view)

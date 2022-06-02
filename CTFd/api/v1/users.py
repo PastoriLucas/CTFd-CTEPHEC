@@ -381,16 +381,18 @@ class UserPrivateFails(Resource):
 
         view = "user" if not (is_admin() or is_observer()) else "admin"
 
-        if response.errors:
-            return {"success": False, "errors": response.errors}, 400
-            response = SubmissionSchema(view=view, many=True).dump(fails)
-        if is_admin():
-
+        # We want to return the count purely for stats & graphs
+        # but this data isn't really needed by the end user.
+        # Only actually show fail data for admins.
         if (is_admin() or is_observer()):
+            response = SubmissionSchema(view=view, many=True).dump(fails)
             data = response.data
+            if response.errors:
+                return {"success": False, "errors": response.errors}, 400
         else:
             data = []
-        count = len(response.data)
+                
+        count = len(fails)
 
         return {"success": True, "data": data, "meta": {"count": count}}
 

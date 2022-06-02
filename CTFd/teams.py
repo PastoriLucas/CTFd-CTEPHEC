@@ -172,25 +172,15 @@ def join():
             user = get_current_user()
             user.team_id = team.id
             modifier = 0
-            print(get_config("first_year_modifier"))
-            for i in team.members:
-                if(i.year == 1):
+            for member in team.members:
+                if(member.year == 1):
                     modifier += int(get_config("first_year_modifier"))
-                if(i.year == 2):
+                if(member.year == 2):
                     modifier += int(get_config("second_year_modifier"))
-                if(i.year == 3):
+                if(member.year == 3):
                     modifier += int(get_config("third_year_modifier"))
-                if(i.year == 4):
+                if(member.year == 4):
                     modifier += int(get_config("old_student_modifier"))
-                    
-            if(user.year == 1):
-                modifier += int(get_config("first_year_modifier"))
-            if(user.year == 2):
-                modifier += int(get_config("second_year_modifier"))
-            if(user.year == 3):
-                modifier += int(get_config("third_year_modifier"))
-            if(user.year == 4):
-                modifier += int(get_config("old_student_modifier"))
                     
             modifier = modifier/ (len(team.members)  +1)            
            
@@ -428,6 +418,7 @@ def private():
 
     if config.is_scoreboard_frozen():
         infos.append("Scoreboard has been frozen")
+    
 
     return render_template(
         "teams/private.html",

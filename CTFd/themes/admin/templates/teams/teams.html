@@ -104,7 +104,11 @@
 								</a>
 							{% endif %}
 							<td>
+								{% if team.modifier is not none%}
 								<a>{{team.modifier}} %</a>
+								{%else%}
+								<a>100 %</a>
+								{%endif%}
 							</td>
 							{% if team.website %}
 								<a href="{{ team.website }}" target="_blank" class="badge badge-info" rel="noopener">

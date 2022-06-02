@@ -126,8 +126,7 @@ export default {
         content: this.getContent(),
         cost: this.getCost(),
         requirements: { prerequisites: this.selectedHints }
-      };
-        }
+        };
       }
       if(this.radio == "1"){
         params = {

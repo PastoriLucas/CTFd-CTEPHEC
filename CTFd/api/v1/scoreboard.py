@@ -67,9 +67,9 @@ class ScoreboardList(Resource):
                 "account_type": account_type,
                 "oauth_id": x.oauth_id,
                 "name": x.name,
-                "score": int(x.score),
+                "score": "%.2f" % x.score,
                 "modifier" : x.modifier,
-                "unmodified_score" : (int(x.score) / int(x.modifier)) * 100
+                "unmodified_score" : round((int(x.score) / int(x.modifier)) * 100)
             }
 
             if mode == TEAMS_MODE:

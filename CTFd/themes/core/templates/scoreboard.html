@@ -50,7 +50,7 @@
 								{% endif %}
 							</a>
 						</td>
-						<td>{{ standing.score |int}}</td>
+						<td>{{ '%0.2f' % standing.score}}</td>
 						<td><a>{{standing.modifier}} %</a></td>
 						<td>{{ (standing.score / standing.modifier * 100) |int}}</td>
 					</tr>
