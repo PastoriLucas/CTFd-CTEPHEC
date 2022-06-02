@@ -567,12 +567,13 @@ $(() => {
     }).$mount(vueContainer);
   }
 
-  // Load Next component
-  if (document.querySelector("#next-add-form")) {
-    const nextChallenge = Vue.extend(NextChallenge);
+  // Load HintsList component for observer users
+  if (document.querySelector("#challenge-hints-observer")) {
+    const hintsList = Vue.extend(HintsListObserver);
+    console.log(hintsList)
     let vueContainer = document.createElement("div");
-    document.querySelector("#next-add-form").appendChild(vueContainer);
-    new nextChallenge({
+    document.querySelector("#challenge-hints-observer").appendChild(vueContainer);
+    new hintsList({
       propsData: { challenge_id: window.CHALLENGE_ID }
     }).$mount(vueContainer);
   }
