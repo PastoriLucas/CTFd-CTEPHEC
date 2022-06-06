@@ -181,9 +181,19 @@ def join():
                     modifier += int(get_config("third_year_modifier"))
                 if(member.year == 4):
                     modifier += int(get_config("old_student_modifier"))
+                print(modifier)
+                
+            if(user.year == 1):
+                modifier += int(get_config("first_year_modifier"))
+            if(user.year == 2):
+                modifier += int(get_config("second_year_modifier"))
+            if(user.year == 3):
+                modifier += int(get_config("third_year_modifier"))
+            if(user.year == 4):
+                modifier += int(get_config("old_student_modifier"))
+                       
                     
             modifier = modifier/ (len(team.members)  +1)            
-           
             team.modifier = modifier
             
             db.session.commit()

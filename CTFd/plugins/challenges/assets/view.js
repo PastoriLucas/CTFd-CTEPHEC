@@ -35,3 +35,36 @@ CTFd._internal.challenge.submit = function(preview) {
     return response;
   });
 };
+
+CTFd._internal.challenge.submitExplanation = function (preview) {
+  var challenge_id = parseInt(CTFd.lib.$('#challenge-id').val())
+  var text = CTFd.lib.$('#explanation-textarea').val()
+
+  var body = {
+      'content': text,
+      'user_id' : 0,
+      'challenge_id': challenge_id,
+  }
+
+  var params = {}
+  if (preview) {
+      params['preview'] = true
+  }
+
+  return CTFd.api.post_explanation(params, body).then(function (response) {
+      if (response.status === 429) {
+          // User was ratelimited but process response
+          return response
+      }
+      if (response.status === 400) {
+          // User was ratelimited but process response
+          return response
+      }
+      if (response.status === 403) {
+          // User is not logged in or CTF is paused.
+          return response
+      }
+      return response
+  })
+};
+

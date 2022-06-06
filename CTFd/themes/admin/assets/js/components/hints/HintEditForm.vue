@@ -44,7 +44,7 @@
                       Type <br />
                       <small>What type of hint it is (what will you pay).</small>
                     </label><br>
-                    <input type="radio" id="hint_standard" name="hint_type" value="0" v-model="radio">
+                    <input type="radio" id="hint_standard" name="hint_type" value="0" v-model="radio" required>
                     <label for="0">Points</label><br>
                     <input type="radio" id="hint_standard" name="hint_type" value="1" v-model="radio">
                     <label for="1">Time</label><br>
@@ -63,7 +63,7 @@
                     <div class="form-group">
                     <label>
                       Time<br />
-                      <small>How much time before the hint release. (mins)</small>
+                      <small>How much time before the hint release. (seconds)</small>
                     </label>
                     <input
                       type="number"

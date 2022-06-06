@@ -134,6 +134,13 @@ const displayChal = chal => {
       $("#explanation-submit").prop("disabled", true);
       CTFd._internal.challenge
         .submitExplanation()
+        .then(
+          ezAlert({
+            title: "Feedback sent",
+            body: "Your feedback has been sent !",
+            button: "Got it!"   
+          })
+        )
     });
 
 
@@ -541,8 +548,6 @@ const loadTimedHint = id => {
       displayHint(response.data);
       return;
     }
-    
-    displayUnlock(id);
   });
 };
 

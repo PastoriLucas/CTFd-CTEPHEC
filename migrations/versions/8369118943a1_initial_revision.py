@@ -108,6 +108,8 @@ def upgrade():
         sa.Column("content", sa.Text(), nullable=True),
         sa.Column("cost", sa.Integer(), nullable=True),
         sa.Column("requirements", sa.JSON(), nullable=True),
+        sa.Column("is_timed", sa.Integer(), nullable=True),
+        sa.Column("time", sa.Integer(), nullable=True),
         sa.ForeignKeyConstraint(["challenge_id"], ["challenges.id"]),
         sa.PrimaryKeyConstraint("id"),
     )
