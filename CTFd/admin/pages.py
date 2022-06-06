@@ -14,13 +14,16 @@ def pages_listing():
     
     current_user = get_current_user()
     pages = Pages.query.all()
-    return render_template("admin/pages.html", pages=pages,current_user_type = current_user.type,)
+    return render_template("admin/pages.html", pages=pages,current_user_type = current_user.type)
 
 
 @admin.route("/admin/pages/new")
 @admins_only
 def pages_new():
-    return render_template("admin/editor.html")
+    
+    current_user = get_current_user()
+    
+    return render_template("admin/editor.html", current_user_type = current_user.type)
 
 
 @admin.route("/admin/pages/preview", methods=["POST"])
